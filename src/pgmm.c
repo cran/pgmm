@@ -9,7 +9,7 @@ funcType funcs[13] = {NULL, aecm,aecm2,aecm3,aecm4,aecm5,aecm6,aecm7,aecm8,aecm9
 funcType2 funcs2[13] = {NULL, claecm,claecm2,claecm3,claecm4,claecm5,claecm6,claecm7,claecm8,claecm9,claecm10,claecm11,claecm12};
 
 void pgmm_c(double *x1, double *z1, double *bic, int *cls, int *q, int *p, int *G, int *N, int *model, int *clust, double *lambda, double *psi, double *tol){
-	double **x, **z, **lmd;
+	double **x, **z;
     funcType func;
     funcType2 func2;
 	my_alloc(&x,*N,*p);
@@ -43,7 +43,9 @@ int convergtest_NEW(double *l, double *at, double *v_max, double **v, int N, int
 	    if(isnan(l[it])||isinf(l[it])) return -1;
     }
 	
-    if(l[it]<l[it-1] && it>0){return -1;}   
+    if(it > 0)
+		if(l[it]<l[it-1])
+			return -1;   
         
 	if(it > 2){
         at[it-1]=(l[it]-l[it-1])/(l[it-1]-l[it-2]);

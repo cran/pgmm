@@ -4,7 +4,7 @@
 #include <float.h>
 #include "functions.h"
 
-void p5M_n(double *n, double **z, int G, int N){    
+void update_n(double *n, double **z, int G, int N){    
 	int g,i;	    
 	for(g=0; g<G; g++){
             n[g]=0.0;
@@ -13,12 +13,12 @@ void p5M_n(double *n, double **z, int G, int N){
     }
 }
     
-void p5M_pi(double *pi, double *n, int G, int N){    
+void update_pi(double *pi, double *n, int G, int N){    
 	int g;	    
 	for(g=0; g<G; g++) pi[g] = n[g]/N; 
 }
     
-void updau8m(double **mu, double *n, double **x, double **z,int G, 
+void update_mu(double **mu, double *n, double **x, double **z,int G, 
 	    int N, int p){    
 	int i,j,g;
 	for(g=0; g<G; g++){
@@ -32,22 +32,22 @@ void updau8m(double **mu, double *n, double **x, double **z,int G,
     }
 }
 
-void p5M_stilde(double **y2etilde, double **x, double **z, double **mu,
+void update_stilde(double **sampcovtilde, double **x, double **z, double **mu,
 	int G, int N, int p){
         int i,j,k,g;
 	for(j=0; j<p; j++){
             for(k=0; k<=j; k++){
-                y2etilde[j][k]=0.0;
+                sampcovtilde[j][k]=0.0;
                 for(g=0;g<G;g++)    
                     for(i=0; i<N; i++)
-                        y2etilde[j][k]+=z[i][g]*(x[i][j]-mu[g][j])*(x[i][k]-mu[g][k]);
-				y2etilde[j][k]/=N;
-                y2etilde[k][j] = y2etilde[j][k];		
+                        sampcovtilde[j][k]+=z[i][g]*(x[i][j]-mu[g][j])*(x[i][k]-mu[g][k]);
+				sampcovtilde[j][k]/=N;
+                sampcovtilde[k][j] = sampcovtilde[j][k];		
             }
     }
 }
 
-void p5M_sg(double ***sg, double **x, double **z, double **mu,
+void update_sg(double ***sg, double **x, double **z, double **mu,
 	double *n, int p, int G, int N){
         int i,j,k,g;
 	
@@ -64,7 +64,7 @@ void p5M_sg(double ***sg, double **x, double **z, double **mu,
 	}
 }
 
-void p5M_kf41(double **kf4, double bx1, double **zR6, int p, int q){
+void update_beta1(double **beta, double psi, double **lambda, int p, int q){
 	int i,j;
 	double **lhs, **rhs, **cp, **result;
 	double det[1];
@@ -73,15 +73,15 @@ void p5M_kf41(double **kf4, double bx1, double **zR6, int p, int q){
 	my_alloc(&cp,p,p);
 	my_alloc(&result,p,p);
 
- 	/* zR6'/bx1 */
-    mx_trans(p, q, zR6, lhs);
+ 	/* Lambda'/psi */
+    mx_trans(p, q, lambda, lhs);
     for(i=0;i<q;i++)
 		for(j=0;j<p;j++)
-            lhs[i][j]/=bx1; /*bx1[j]*/
- 	/* zR6'/bx1* zR6 */
-    mx_mult(q, p, q, lhs, zR6, cp);
+            lhs[i][j]/=psi; /*psi[j]*/
+ 	/* Lambda'/psi* Lambda */
+    mx_mult(q, p, q, lhs, lambda, cp);
         
-    /* (I + zR6'/bx1*zR6)^{-1} */
+    /* (I + Lambda'/psi*Lambda)^{-1} */
     for(i=0; i<q;i++){
 		for(j=0;j<q;j++){
 			result[i][j] = cp[i][j];
@@ -95,12 +95,12 @@ void p5M_kf41(double **kf4, double bx1, double **zR6, int p, int q){
 	
 	for(i=0;i<q;i++)
 		for(j=0;j<p;j++)
-			kf4[i][j] = lhs[i][j] - rhs[i][j];       
+			beta[i][j] = lhs[i][j] - rhs[i][j];       
  
 	my_free(lhs,p); my_free(result,p); my_free(rhs,p); my_free(cp,p);
 }
 
-void p5M_kf42(double **kf4, double *bx1, double **zR6, int p, int q){
+void update_beta2(double **beta, double *Psi, double **lambda, int p, int q){
 	int i,j;
 	double **lhs, **rhs, **cp, **result;
 	double det[1];
@@ -109,15 +109,15 @@ void p5M_kf42(double **kf4, double *bx1, double **zR6, int p, int q){
 	my_alloc(&cp,p,p);
 	my_alloc(&result,p,p);
 
- 	/* zR6'/bx1 */
-    mx_trans(p, q, zR6, lhs);
+ 	/* Lambda'/psi */
+    mx_trans(p, q, lambda, lhs);
     for(i=0;i<q;i++)
 		for(j=0;j<p;j++)
-            lhs[i][j]/=bx1[j];
- 	/* zR6'/bx1* zR6 */
-    mx_mult(q, p, q, lhs, zR6, cp);
+            lhs[i][j]/=Psi[j];
+ 	/* Lambda'/psi* Lambda */
+    mx_mult(q, p, q, lhs, lambda, cp);
         
-    /* (I + zR6'/bx1*zR6)^{-1} */
+    /* (I + Lambda'/psi*Lambda)^{-1} */
     for(i=0; i<q;i++){
 		for(j=0;j<q;j++){
 			result[i][j] = cp[i][j];
@@ -131,12 +131,12 @@ void p5M_kf42(double **kf4, double *bx1, double **zR6, int p, int q){
 	
 	for(i=0;i<q;i++)
 		for(j=0;j<p;j++)
-			kf4[i][j] = lhs[i][j] - rhs[i][j];       
+			beta[i][j] = lhs[i][j] - rhs[i][j];       
  
 	my_free(lhs,p); my_free(result,p); my_free(rhs,p); my_free(cp,p);
 }
 
-void p5M_po1(double **po1, double **kf4, double **zR6, double **y2etilde, int p, int q){ 
+void update_theta(double **theta, double **beta, double **lambda, double **sampcovtilde, int p, int q){ 
 	int i,j;
 	double **id_q, **r_1, **r_2, **r_3, **tmp;
 	
@@ -147,23 +147,23 @@ void p5M_po1(double **po1, double **kf4, double **zR6, double **y2etilde, int p,
 	my_alloc(&id_q,q,q);
 	generate_identity(q, id_q);	
 	
-	/* Work out kf4*zR6 */
-    mx_mult(q, p, q, kf4, zR6, r_1);
+	/* Work out beta*lambda */
+    mx_mult(q, p, q, beta, lambda, r_1);
     
-    /* Now, work out kf4*y2etilde*kf4' */
-    mx_mult(q, p, p, kf4, y2etilde, r_2);
-    mx_trans(q, p, kf4, tmp);    
+    /* Now, work out beta*sampcovtilde*beta' */
+    mx_mult(q, p, p, beta, sampcovtilde, r_2);
+    mx_trans(q, p, beta, tmp);    
     mx_mult(q, p, q, r_2, tmp, r_3);    
                  
     for(i=0;i<q;i++)
 		for(j=0;j<q;j++)
-			po1[i][j] = id_q[i][j]-r_1[i][j]+r_3[i][j];
+			theta[i][j] = id_q[i][j]-r_1[i][j]+r_3[i][j];
        
 	my_free(id_q,q); my_free(tmp,p); my_free(r_1,q); my_free(r_2,q); 
 	my_free(r_3,q);
 }
 
-void p5M_zR6(double **zR6, double **kf4, double **s, double **po1, int p, int q){
+void update_lambda(double **lambda, double **beta, double **s, double **theta, int p, int q){
 	
 	int i,j;
 	double **tran, **res1, **res2, **res3, det[1];
@@ -173,25 +173,25 @@ void p5M_zR6(double **zR6, double **kf4, double **s, double **po1, int p, int q)
 	my_alloc(&res2,q,q);
 	my_alloc(&res3,q,q);
 	
-	/* y2etilde*kf4'*/
-    mx_trans(q,p,kf4,tran);
+	/* sampcovtilde*beta'*/
+    mx_trans(q,p,beta,tran);
     mx_mult(p,p,q,s,tran,res1);
     	
-	/* Make of copy of po1 ahead of Gauss-Jordan */
+	/* Make of copy of theta ahead of Gauss-Jordan */
 	for(i=0;i<q;i++)
         for(j=0;j<q;j++)
-            res3[i][j] = po1[i][j];   
+            res3[i][j] = theta[i][j];   
         
-	/* zR6=y2etilde*kf4'*po1^{-1} */
+	/* lambda=sampcovtilde*beta'*theta^{-1} */
     GaussJordan(q, res3, res2,det);
-    mx_mult(p,q,q,res1,res2,zR6);
+    mx_mult(p,q,q,res1,res2,lambda);
     
 	my_free(tran,p); my_free(res1,p); my_free(res2,q); my_free(res3,q);
 }
 
 /* For CUU */
-void p5M_zR6_cuu(double **zR6, double ***kf4, double ***s, 
-	double ***po1, double *n, double **bx1, int p, int q, int G){
+void update_lambda_cuu(double **lambda, double ***beta, double ***s, 
+	double ***theta, double *n, double **Psi, int p, int q, int G){
 	
 	int i,j,k,g;
 	double **tran, **res1, **res2, **res3, det[1];
@@ -202,46 +202,46 @@ void p5M_zR6_cuu(double **zR6, double ***kf4, double ***s,
 	my_alloc(&res3,q,q);	
 	
     /* Compute the RHS --- only needs to happen once */
-	/* sum_g[y2e_g*kf4_g'*n_g/bx1_g] */
+	/* sum_g[sampcov_g*beta_g'*n_g/psi_g] */
     for(g=0;g<G;g++){
-		mx_trans(q,p,kf4[g],tran);
+		mx_trans(q,p,beta[g],tran);
 		mx_mult(p,p,q,s[g],tran,res1);
 		if(g==0){ 
 			for(i=0;i<p;i++)
 				for(j=0;j<q;j++)
-					res2[i][j] = res1[i][j]*n[g]/bx1[g][i];
+					res2[i][j] = res1[i][j]*n[g]/Psi[g][i];
 		}else{
 			for(i=0;i<p;i++)
 				for(j=0;j<q;j++)
-					res2[i][j] += res1[i][j]*n[g]/bx1[g][i];    
+					res2[i][j] += res1[i][j]*n[g]/Psi[g][i];    
 		}
     }
 
-    /* Now solve for zR6 row-by-row */
+    /* Now solve for lambda row-by-row */
 	for (i=0;i<p;i++){
-		/* First, compute the po1 sum*/
+		/* First, compute the theta sum*/
 		for(g=0;g<G;g++){
 			if(g==0){ 
 				for(k=0;k<q;k++)
 					for(j=0;j<q;j++)
-						res3[k][j] = po1[g][k][j]*n[g]/bx1[g][i];
+						res3[k][j] = theta[g][k][j]*n[g]/Psi[g][i];
 			}else{
 				for(k=0;k<q;k++)
 					for(j=0;j<q;j++)
-						res3[k][j] += po1[g][k][j]*n[g]/bx1[g][i];    
+						res3[k][j] += theta[g][k][j]*n[g]/Psi[g][i];    
 			}
 		}
-		/* Invert po1 sum */
+		/* Invert theta sum */
 		GaussJordan(q, res3, res1, det);
 		
-		/* Now solve for row i of zR6 */
-		vec_mx_mult(q, q, res2[i], res1, zR6[i]);
+		/* Now solve for row i of lambda */
+		vec_mx_mult(q, q, res2[i], res1, lambda[i]);
 	}     	
 	my_free(tran,p); my_free(res1,p); my_free(res2,p); my_free(res3,q);
 }
 
 /* For CUC */
-void p5M_zR62(double **zR6, double ***kf4, double ***s, double ***po1, double *n, double *bx1, int p, 
+void update_lambda2(double **lambda, double ***beta, double ***s, double ***theta, double *n, double *Psi, int p, 
 		int q, int G){
 	
 	int i,j,g;
@@ -252,114 +252,114 @@ void p5M_zR62(double **zR6, double ***kf4, double ***s, double ***po1, double *n
 	my_alloc(&res2,p,q);
 	my_alloc(&res3,q,q);
 	
-    /* sum_g[y2e_g*kf4_g'*n_g/bx1_g] */
+    /* sum_g[sampcov_g*beta_g'*n_g/psi_g] */
     for(g=0;g<G;g++){
-		mx_trans(q,p,kf4[g],tran);
+		mx_trans(q,p,beta[g],tran);
 		mx_mult(p,p,q,s[g],tran,res1);
 		if(g==0){ 
 			for(i=0;i<p;i++)
 				for(j=0;j<q;j++)
-					res2[i][j] = res1[i][j]*n[g]/bx1[g];
+					res2[i][j] = res1[i][j]*n[g]/Psi[g];
 		}else{
 			for(i=0;i<p;i++)
 				for(j=0;j<q;j++)
-					res2[i][j] += res1[i][j]*n[g]/bx1[g];    
+					res2[i][j] += res1[i][j]*n[g]/Psi[g];    
 		}
     }
 
-   	/* sum_g[po1_g'*n_g/bx1_g]^{-1} */
+   	/* sum_g[theta_g'*n_g/psi_g]^{-1} */
     for(g=0;g<G;g++){
 		if(g==0){ 
 			for(i=0;i<q;i++)
 				for(j=0;j<q;j++)
-					res3[i][j] = po1[g][i][j]*n[g]/bx1[g];
+					res3[i][j] = theta[g][i][j]*n[g]/Psi[g];
 		}else{
 			for(i=0;i<q;i++)
 				for(j=0;j<q;j++)
-					res3[i][j] += po1[g][i][j]*n[g]/bx1[g];    
+					res3[i][j] += theta[g][i][j]*n[g]/Psi[g];    
 		}
     }
         
-    GaussJordan(q, res3, res1,det); /* inverting the po1 sum */
-    mx_mult(p,q,q,res2,res1,zR6); /* this gives zR6 */ 
+    GaussJordan(q, res3, res1,det); /* inverting the theta sum */
+    mx_mult(p,q,q,res2,res1,lambda); /* this gives lambda */ 
 	
 	my_free(tran,p); my_free(res1,p); my_free(res2,p); my_free(res3,q);
 }
 
-double p5M_bx1(double **zR6, double **kf4, double **y2etilde, int p, int q){ 
+double update_psi(double **lambda, double **beta, double **sampcovtilde, int p, int q){ 
 	
 	int i;
 	double **result_1, *result_2; 
-	double bx1;
+	double psi;
 	my_alloc(&result_1,p,p);
 	my_alloc_vec(&result_2,p);
 
-	/* zR6*kf4*y2etilde */
-    mx_mult(p,q,p,zR6, kf4, result_1);
-    mx_mult_diag1(p,p,result_1, y2etilde, result_2);
+	/* lambda*beta*sampcovtilde */
+    mx_mult(p,q,p,lambda, beta, result_1);
+    mx_mult_diag1(p,p,result_1, sampcovtilde, result_2);
        
-    bx1 = 0.0;
+    psi = 0.0;
     for(i=0;i<p;i++)
-        bx1 += y2etilde[i][i]-result_2[i];
-    bx1 /= p;
+        psi += sampcovtilde[i][i]-result_2[i];
+    psi /= p;
 	
 	my_free(result_1,p); free(result_2); 
 	
-	return bx1;
+	return psi;
 }
 
-/* Account for bx1_p*/
-void p5M_bx12(double *bx1, double **zR6, double **kf4, double **y2etilde, int p, int q){ 
+/* Account for Psi_p*/
+void update_psi2(double *psi, double **lambda, double **beta, double **sampcovtilde, int p, int q){ 
 	
 	int i;
 	double **result_1, *result_2;
 	my_alloc(&result_1,p,p);
 	my_alloc_vec(&result_2,p);
 
-	/* zR6*kf4*y2etilde */
-	mx_mult(p,q,p,zR6, kf4, result_1);
-    mx_mult_diag1(p,p,result_1, y2etilde, result_2);
+	/* lambda*beta*sampcovtilde */
+	mx_mult(p,q,p,lambda, beta, result_1);
+    mx_mult_diag1(p,p,result_1, sampcovtilde, result_2);
         
     for(i=0;i<p;i++)
-		bx1[i] = y2etilde[i][i]-result_2[i];
+		psi[i] = sampcovtilde[i][i]-result_2[i];
 	
 	my_free(result_1,p); free(result_2); 
 }
 
 /* CUC case */
-double p5M_bx13(double **zR6, double **kf4, double **y2eg, double **po1, int p, int q){ 
+double update_psi3(double **lambda, double **beta, double **sampcovg, double **theta, int p, int q){ 
 	
 	int i;
 	double **temp, **result_1, *result_2, *result_3; 
-	double bx1;
+	double psi;
 	my_alloc(&temp,q,p);
 	my_alloc(&result_1,p,p);
 	my_alloc_vec(&result_2,p);
 	my_alloc_vec(&result_3,p);
 
-	/* zR6*kf4*y2e */
-    mx_mult(p,q,p,zR6, kf4, result_1);
-    mx_mult_diag1(p,p,result_1, y2eg, result_2);
+	/* lambda*beta*sampcov */
+    mx_mult(p,q,p,lambda, beta, result_1);
+    mx_mult_diag1(p,p,result_1, sampcovg, result_2);
        
-	/* zR6*po1*zR6' */
-    mx_trans(p,q,zR6,temp);
-    mx_mult(p,q,q,zR6,po1,result_1); 
+	/* lambda*theta*lambda' */
+    mx_trans(p,q,lambda,temp);
+    mx_mult(p,q,q,lambda,theta,result_1); 
     mx_mult_diag1(p,q,result_1,temp,result_3);
         
-    bx1 = 0.0;
+    psi = 0.0;
     for(i=0;i<p;i++)
-        bx1 += y2eg[i][i]-2*result_2[i]+result_3[i];
-    bx1 /= p;
+        psi += sampcovg[i][i]-2*result_2[i]+result_3[i];
+    psi /= p;
 	
 	my_free(temp,q); my_free(result_1,p); free(result_2); 
 	free(result_3);
 	
-	return bx1;
+	return psi;
 }
 
 /* CUU case */
-void p5M_bx1_cuu(double **bx1, double **zR6, double ***kf4, double ***y2eg, double 
-	***po1, int p, int q, int G){ 
+void update_psi_cuu(double **psi, double **lambda, double ***beta, double ***sampcovg, double 
+	***theta, int p, int q, int G){ 
 	
 	int i, g;
 	double **temp, **result_1, **result_2, **result_3;
@@ -368,75 +368,75 @@ void p5M_bx1_cuu(double **bx1, double **zR6, double ***kf4, double ***y2eg, doub
 	my_alloc(&result_2,G,p);
 	my_alloc(&result_3,G,p);
 
-	/* zR6*kf4*y2e */
+	/* lambda*beta*sampcov */
     for (g=0;g<G;g++){
-		mx_mult(p,q,p,zR6, kf4[g], result_1);
-    	mx_mult_diag1(p,p,result_1, y2eg[g], result_2[g]);
+		mx_mult(p,q,p,lambda, beta[g], result_1);
+    	mx_mult_diag1(p,p,result_1, sampcovg[g], result_2[g]);
 	}
        
-	/* zR6*po1*zR6' */
+	/* lambda*theta*lambda' */
     for(g=0;g<G;g++){
-		mx_trans(p,q,zR6,temp);
-        mx_mult(p,q,q,zR6,po1[g],result_1); 
+		mx_trans(p,q,lambda,temp);
+        mx_mult(p,q,q,lambda,theta[g],result_1); 
         mx_mult_diag1(p,q,result_1,temp,result_3[g]);
 	}
         
     for(g=0;g<G;g++)
 	    for(i=0;i<p;i++)
-             	bx1[g][i] = y2eg[g][i][i]-2*result_2[g][i]+result_3[g][i];
+             	psi[g][i] = sampcovg[g][i][i]-2*result_2[g][i]+result_3[g][i];
 	
 	my_free(temp,q); my_free(result_1,p); my_free(result_2,G); 
 	my_free(result_3,G);
 }
 
 /* UCU*/
-void p5M_bx1_ucu(double *bx1, double ***zR6, double ***kf4, double ***y2e, int p, int q, double *pi, int G){ 
+void update_psi_ucu(double *psi, double ***lambda, double ***beta, double ***sampcov, int p, int q, double *pi, int G){ 
 	
 	int i,g;
 	double **result_1, **result_2;
 	my_alloc(&result_1,p,p);
 	my_alloc(&result_2,G,p);
 
-	/* zR6*kf4*y2etilde */
+	/* lambda*beta*sampcovtilde */
     for (g=0; g<G; g++){
-	    mx_mult(p,q,p,zR6[g], kf4[g], result_1);
-        mx_mult_diag1(p,p,result_1, y2e[g], result_2[g]);
+	    mx_mult(p,q,p,lambda[g], beta[g], result_1);
+        mx_mult_diag1(p,p,result_1, sampcov[g], result_2[g]);
 	}
 	
     for(i=0;i<p;i++){
-		bx1[i]=0.0;
-		for(g=0;g<G;g++) bx1[i] += pi[g]*(y2e[g][i][i]-result_2[g][i]);
+		psi[i]=0.0;
+		for(g=0;g<G;g++) psi[i] += pi[g]*(sampcov[g][i][i]-result_2[g][i]);
 	}
 	
 	my_free(result_1,p); my_free(result_2,G); 
 }
 
 /* UCC*/
-double p5M_bx1_ucc(double ***zR6, double ***kf4, double ***y2e, int p, int q, double *pi, int G){ 
+double update_psi_ucc(double ***lambda, double ***beta, double ***sampcov, int p, int q, double *pi, int G){ 
 	
 	int i,g;
-	double **result_1, **result_2, bx1;
+	double **result_1, **result_2, psi;
 	my_alloc(&result_1,p,p);
 	my_alloc(&result_2,G,p);
 
-	/* zR6*kf4*y2etilde */
+	/* lambda*beta*sampcovtilde */
 	for (g=0; g<G; g++){
-		mx_mult(p,q,p,zR6[g], kf4[g], result_1);
-        mx_mult_diag1(p,p,result_1, y2e[g], result_2[g]);
+		mx_mult(p,q,p,lambda[g], beta[g], result_1);
+        mx_mult_diag1(p,p,result_1, sampcov[g], result_2[g]);
 	}
 	
-    bx1=0.0;
+    psi=0.0;
 	for(g=0;g<G;g++)
 	    for(i=0;i<p;i++)
-			bx1 += pi[g]*(y2e[g][i][i]-result_2[g][i]);
-	bx1 /= p;
+			psi += pi[g]*(sampcov[g][i][i]-result_2[g][i]);
+	psi /= p;
 	
 	my_free(result_1,p); my_free(result_2,G);
 
-	return bx1;
+	return psi;
 }
 
-double p5M_det_sigma_NEW(double **zR6, double bx1, double ja2, int p, int q){
+double update_det_sigma_NEW(double **lambda, double psi, double log_detpsi, int p, int q){
 
 	int i, j;
 	double **tmp, **tmp2, det[1];
@@ -444,8 +444,8 @@ double p5M_det_sigma_NEW(double **zR6, double bx1, double ja2, int p, int q){
 	my_alloc(&tmp,p,p);
 	my_alloc(&tmp2,p,p);
 
-	p5M_kf41(tmp2, bx1, zR6, p, q);
-	mx_mult(q,p,q,tmp2, zR6, tmp);
+	update_beta1(tmp2, psi, lambda, p, q);
+	mx_mult(q,p,q,tmp2, lambda, tmp);
     for(i=0;i<q;i++){
 		for(j=0;j<q;j++){
 			tmp2[i][j] = tmp[i][j]*(-1.0);
@@ -456,10 +456,10 @@ double p5M_det_sigma_NEW(double **zR6, double bx1, double ja2, int p, int q){
 
 	my_free(tmp,p); my_free(tmp2,p);
 
-	return (ja2 - log(det[0]));
+	return (log_detpsi - log(det[0]));
 }
 
-double p5M_det_sigma_NEW2(double **zR6, double *bx1, double ja2, int p, int q){
+double update_det_sigma_NEW2(double **lambda, double *psi, double log_detpsi, int p, int q){
 
 	int i, j;
 	double **tmp, **tmp2, det[1];
@@ -467,8 +467,8 @@ double p5M_det_sigma_NEW2(double **zR6, double *bx1, double ja2, int p, int q){
 	my_alloc(&tmp,p,p);
 	my_alloc(&tmp2,p,p);
 
-	p5M_kf42(tmp2, bx1, zR6, p, q);
-	mx_mult(q,p,q,tmp2, zR6, tmp);
+	update_beta2(tmp2, psi, lambda, p, q);
+	mx_mult(q,p,q,tmp2, lambda, tmp);
     for(i=0;i<q;i++){
 		for(j=0;j<q;j++){
 			tmp2[i][j] = tmp[i][j]*(-1.0);
@@ -479,10 +479,10 @@ double p5M_det_sigma_NEW2(double **zR6, double *bx1, double ja2, int p, int q){
 
 	my_free(tmp,p); my_free(tmp2,p);
 
-	return (ja2 - log(det[0]));
+	return (log_detpsi - log(det[0]));
 }
 
-double p5M_det_sigma(double **zR6, double **sigma, double ja2, int p, int q){
+double update_det_sigma(double **lambda, double **sigma, double log_detpsi, int p, int q){
 
 	int i,j;
 	double siginv, det[1];
@@ -493,10 +493,10 @@ double p5M_det_sigma(double **zR6, double **sigma, double ja2, int p, int q){
 	my_alloc(&r_2,p,p);
 	my_alloc(&r_3,p,p);
 	
-	/* |I-zR6'*sigma*zR6| */
-    mx_trans(p, q, zR6, tmp);
+	/* |I-lambda'*sigma*lambda| */
+    mx_trans(p, q, lambda, tmp);
     mx_mult(q, p, p, tmp, sigma, r_1);
-    mx_mult(q,p,q,r_1,zR6,r_3);
+    mx_mult(q,p,q,r_1,lambda,r_3);
     for(i=0;i<q;i++){
        	for(j=0;j<q;j++){
         	r_3[i][j] = 0-r_3[i][j];
@@ -504,24 +504,23 @@ double p5M_det_sigma(double **zR6, double **sigma, double ja2, int p, int q){
         }
     }
     GaussJordan(q,r_3,r_2,det);
-    siginv = ja2 - log(det[0]);
+    siginv = log_detpsi - log(det[0]);
 	
 	my_free(tmp,p); my_free(r_1,p); my_free(r_2,p); my_free (r_3,p);
 	/*if (siginv<0) printf("-");*/
 	return siginv;
 }
 
-/***************** p5M Z values WITHOUT Sigma ************************/
-int p5M_z(double **v, double **x, double **z, double **zR6, double bx1, double **mu, 
+/***************** Update Z values WITHOUT Sigma ************************/
+int update_z(double **v, double **x, double **z, double **lambda, double psi, double **mu, 
 	      double *pi, double *max_v, double log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
    
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury(x[i], zR6, bx1, mu[g], p, q);
+			a = woodbury(x[i], lambda, psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c;
         }/* End g loop */
@@ -534,7 +533,7 @@ int p5M_z(double **v, double **x, double **z, double **zR6, double bx1, double *
 }
 
 /*************************** Woodbury trick **********************************/
-double woodbury(double *x, double **zR6, double bx1, double *mu, int p, int q){
+double woodbury(double *x, double **lambda, double psi, double *mu, int p, int q){
 	int i,j;
 	double *lvec, *tvec, *cvec, **temp, **cp, **result, det[1], lhs, rhs;
 	my_alloc_vec(&lvec,p);
@@ -548,46 +547,45 @@ double woodbury(double *x, double **zR6, double bx1, double *mu, int p, int q){
 	lhs = 0.0;
 	for (j=0;j<p;j++)
 		lhs += (x[j]-mu[j])*(x[j]-mu[j]);
-	lhs /= bx1; 
+	lhs /= psi; 
 
     /* Compute RHS */
 	for (j=0;j<p;j++)
-		lvec[j] = (x[j]-mu[j])/bx1;
-	vec_mx_mult(p,q,lvec,zR6,tvec);
- 	/* zR6'/bx1 */
-    mx_trans(p, q, zR6, temp);
+		lvec[j] = (x[j]-mu[j])/psi;
+	vec_mx_mult(p,q,lvec,lambda,tvec);
+ 	/* Lambda'/psi */
+    mx_trans(p, q, lambda, temp);
     for(i=0;i<q;i++)
 		for(j=0;j<p;j++)
-            temp[i][j]/=bx1;
- 	/* zR6'/bx1* zR6 */
-    mx_mult(q, p, q, temp, zR6, result);
-    /* (I + zR6'/bx1*zR6)^{-1} */
+            temp[i][j]/=psi;
+ 	/* Lambda'/psi* Lambda */
+    mx_mult(q, p, q, temp, lambda, result);
+    /* (I + Lambda'/psi*Lambda)^{-1} */
     for(i=0; i<q;i++) result[i][i] += 1.0;
     GaussJordan(q, result, cp, det);
-    mx_trans(p, q, zR6, temp);
+    mx_trans(p, q, lambda, temp);
     mx_mult(q, q, p, cp, temp, result);
 	vec_mx_mult(q,p,tvec,result,cvec);
 	rhs = 0.0;
 	for (j=0;j<p;j++)
 		rhs += cvec[j]*(x[j]-mu[j]);
-	rhs /= bx1; 
+	rhs /= psi; 
 	
 	free(lvec); free(cvec); free(tvec); my_free(result,q); my_free(temp,q); my_free(cp,q);
 
 	return (lhs-rhs);
 }
 
-/***************** p5M Z values WITHOUT Sigma ************************/
-int p5M_z2(double **v, double **x, double **z, double **zR6, double *bx1, double **mu, 
+/***************** Update Z values WITHOUT Sigma ************************/
+int update_z2(double **v, double **x, double **z, double **lambda, double *psi, double **mu, 
 	      double *pi, double *max_v, double log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury2(x[i], zR6, bx1, mu[g], p, q);
+			a = woodbury2(x[i], lambda, psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c;
         }/* End g loop */
@@ -600,7 +598,7 @@ int p5M_z2(double **v, double **x, double **z, double **zR6, double *bx1, double
 }
 
 /*************************** Woodbury trick **********************************/
-double woodbury2(double *x, double **zR6, double *bx1, double *mu, int p, int q){
+double woodbury2(double *x, double **lambda, double *psi, double *mu, int p, int q){
 	int i,j;
 	double *lvec, *tvec, *cvec, **temp, **cp, **result, det[1], lhs, rhs;
 	my_alloc_vec(&lvec,p);
@@ -613,45 +611,44 @@ double woodbury2(double *x, double **zR6, double *bx1, double *mu, int p, int q)
 	/* Compute LHS */
 	lhs = 0.0;
 	for (j=0;j<p;j++)
-		lhs += (x[j]-mu[j])*(x[j]-mu[j])/bx1[j];
+		lhs += (x[j]-mu[j])*(x[j]-mu[j])/psi[j];
 
     /* Compute RHS */
 	for (j=0;j<p;j++)
-		lvec[j] = (x[j]-mu[j])/bx1[j];
-	vec_mx_mult(p,q,lvec,zR6,tvec);
- 	/* zR6'/bx1 */
-    mx_trans(p, q, zR6, temp);
+		lvec[j] = (x[j]-mu[j])/psi[j];
+	vec_mx_mult(p,q,lvec,lambda,tvec);
+ 	/* Lambda'/psi */
+    mx_trans(p, q, lambda, temp);
     for(i=0;i<q;i++)
 		for(j=0;j<p;j++)
-            temp[i][j]/=bx1[j];
- 	/* zR6'/bx1* zR6 */
-    mx_mult(q, p, q, temp, zR6, result);
-    /* (I + zR6'/bx1*zR6)^{-1} */
+            temp[i][j]/=psi[j];
+ 	/* Lambda'/psi* Lambda */
+    mx_mult(q, p, q, temp, lambda, result);
+    /* (I + Lambda'/psi*Lambda)^{-1} */
     for(i=0; i<q;i++) result[i][i] += 1.0;
     GaussJordan(q, result, cp, det);
-    mx_trans(p, q, zR6, temp);
+    mx_trans(p, q, lambda, temp);
     mx_mult(q, q, p, cp, temp, result);
 	vec_mx_mult(q,p,tvec,result,cvec);
 	rhs = 0.0;
 	for (j=0;j<p;j++)
-		rhs += cvec[j]*(x[j]-mu[j])/bx1[j];
+		rhs += cvec[j]*(x[j]-mu[j])/psi[j];
 	
 	free(lvec); free(cvec); free(tvec); my_free(result,q); my_free(temp,q); my_free(cp,q);
 
 	return (lhs-rhs);
 }
 
-/***************** p5M Z values WITHOUT Sigma ************************/
-int p5M_z3(double **v, double **x, double **z, double **zR6, double *bx1, double **mu, 
+/***************** Update Z values WITHOUT Sigma ************************/
+int update_z3(double **v, double **x, double **z, double **lambda, double *psi, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury(x[i], zR6, bx1[g], mu[g], p, q);
+			a = woodbury(x[i], lambda, psi[g], mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -663,17 +660,16 @@ int p5M_z3(double **v, double **x, double **z, double **zR6, double *bx1, double
     return 0;
 }
 
-/***************** p5M Z values WITHOUT Sigma ************************/
-int p5M_z4(double **v, double **x, double **z, double **zR6, double **bx1, double **mu, 
+/***************** Update Z values WITHOUT Sigma ************************/
+int update_z4(double **v, double **x, double **z, double **lambda, double **psi, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury2(x[i], zR6, bx1[g], mu[g], p, q);
+			a = woodbury2(x[i], lambda, psi[g], mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -685,16 +681,15 @@ int p5M_z4(double **v, double **x, double **z, double **zR6, double **bx1, doubl
     return 0;
 }
 
-int p5M_z5(double **v, double **x, double **z, double ***zR6, double bx1, double **mu, 
+int update_z5(double **v, double **x, double **z, double ***lambda, double psi, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
    
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury(x[i], zR6[g], bx1, mu[g], p, q);
+			a = woodbury(x[i], lambda[g], psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -706,16 +701,15 @@ int p5M_z5(double **v, double **x, double **z, double ***zR6, double bx1, double
     return 0;
 }
 
-int p5M_z6(double **v, double **x, double **z, double ***zR6, double *bx1, double **mu, 
+int update_z6(double **v, double **x, double **z, double ***lambda, double *psi, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury2(x[i], zR6[g], bx1, mu[g], p, q);
+			a = woodbury2(x[i], lambda[g], psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -727,16 +721,15 @@ int p5M_z6(double **v, double **x, double **z, double ***zR6, double *bx1, doubl
     return 0;
 }
 
-int p5M_z7(double **v, double **x, double **z, double ***zR6, double *bx1, double **mu, 
+int update_z7(double **v, double **x, double **z, double ***lambda, double *psi, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury(x[i], zR6[g], bx1[g], mu[g], p, q);
+			a = woodbury(x[i], lambda[g], psi[g], mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -748,16 +741,15 @@ int p5M_z7(double **v, double **x, double **z, double ***zR6, double *bx1, doubl
     return 0;
 }
 
-int p5M_z8(double **v, double **x, double **z, double ***zR6, double **bx1, double **mu, 
+int update_z8(double **v, double **x, double **z, double ***lambda, double **psi, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g;
-    double d,a,e,d_alt;        
+    double a,e,d_alt;        
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			a = woodbury2(x[i], zR6[g], bx1[g], mu[g], p, q);
+			a = woodbury2(x[i], lambda[g], psi[g], mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -769,19 +761,18 @@ int p5M_z8(double **v, double **x, double **z, double ***zR6, double **bx1, doub
     return 0;
 }
 
-int p5M_z9(double **v, double **x, double **z, double **zR6, double *dsw, double *g9p, double **mu, 
+int update_z9(double **v, double **x, double **z, double **lambda, double *omega, double *delta, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g,j;
-    double d,a,e,d_alt, *bx1;
+    double a,e,d_alt, *psi;
 
-	my_alloc_vec(&bx1,p);
+	my_alloc_vec(&psi,p);
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			for(j=0;j<p;j++) bx1[j]=dsw[g]*g9p[j];
-			a = woodbury2(x[i], zR6, bx1, mu[g], p, q);
+			for(j=0;j<p;j++) psi[j]=omega[g]*delta[j];
+			a = woodbury2(x[i], lambda, psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -793,19 +784,18 @@ int p5M_z9(double **v, double **x, double **z, double **zR6, double *dsw, double
     return 0;
 }
 
-int p5M_z10(double **v, double **x, double **z, double ***zR6, double *dsw, double *g9p, double **mu, 
+int update_z10(double **v, double **x, double **z, double ***lambda, double *omega, double *delta, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g,j;
-    double d,a,e,d_alt, *bx1;
+    double a,e,d_alt, *psi;
 
-	my_alloc_vec(&bx1,p);
+	my_alloc_vec(&psi,p);
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			for(j=0;j<p;j++) bx1[j]=dsw[g]*g9p[j];
-			a = woodbury2(x[i], zR6[g], bx1, mu[g], p, q);
+			for(j=0;j<p;j++) psi[j]=omega[g]*delta[j];
+			a = woodbury2(x[i], lambda[g], psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -817,19 +807,18 @@ int p5M_z10(double **v, double **x, double **z, double ***zR6, double *dsw, doub
 	return 0;
 }
 
-int p5M_z11(double **v, double **x, double **z, double **zR6, double dsw, double **g9p, double **mu, 
+int update_z11(double **v, double **x, double **z, double **lambda, double omega, double **delta, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g,j;
-    double d,a,e,d_alt, *bx1;
+    double a,e,d_alt, *psi;
 
-	my_alloc_vec(&bx1,p);
+	my_alloc_vec(&psi,p);
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			for(j=0;j<p;j++) bx1[j]=dsw*g9p[g][j];
-			a = woodbury2(x[i], zR6, bx1, mu[g], p, q);
+			for(j=0;j<p;j++) psi[j]=omega*delta[g][j];
+			a = woodbury2(x[i], lambda, psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -841,19 +830,18 @@ int p5M_z11(double **v, double **x, double **z, double **zR6, double dsw, double
 	return 0;
 }
 
-int p5M_z12(double **v, double **x, double **z, double ***zR6, double dsw, double **g9p, double **mu, 
+int update_z12(double **v, double **x, double **z, double ***lambda, double omega, double **delta, double **mu, 
 	      double *pi, double *max_v, double *log_c, int N, int G, int p, int q){
     
     int i,g,j;
-    double d,a,e,d_alt, *bx1;
+    double a,e,d_alt, *psi;
 
-	my_alloc_vec(&bx1,p);
+	my_alloc_vec(&psi,p);
     
     for(i=0; i<N; i++){
-        d=0.0;
         for(g=0; g<G; g++){
-			for(j=0;j<p;j++) bx1[j]=dsw*g9p[g][j];
-			a = woodbury2(x[i], zR6[g], bx1, mu[g], p, q);
+			for(j=0;j<p;j++) psi[j]=omega*delta[g][j];
+			a = woodbury2(x[i], lambda[g], psi, mu[g], p, q);
 			e = a/2.0*(-1.0);
 			v[i][g] = e + log(pi[g]) - log_c[g];
         }/* End g loop */
@@ -865,61 +853,61 @@ int p5M_z12(double **v, double **x, double **z, double ***zR6, double dsw, doubl
 	return 0;
 }
 
-double p5M_dsw(double **zR6, double *g9p, double **kf4, double **y2eg, double **po1, int p, int q){ 
+double update_omega(double **lambda, double *delta, double **beta, double **sampcovg, double **theta, int p, int q){ 
 	
 	int i;
 	double **temp, **result_1, *result_2, *result_3; 
-	double dsw;
+	double omega;
 
 	my_alloc(&temp,q,p);
 	my_alloc(&result_1,p,p);
 	my_alloc_vec(&result_2,p);
 	my_alloc_vec(&result_3,p);
 
-	/* zR6*kf4*y2e */
-    mx_mult(p,q,p,zR6, kf4, result_1);
-    mx_mult_diag1(p,p,result_1, y2eg, result_2);
+	/* lambda*beta*sampcov */
+    mx_mult(p,q,p,lambda, beta, result_1);
+    mx_mult_diag1(p,p,result_1, sampcovg, result_2);
        
-	/* zR6*po1*zR6' */
-    mx_trans(p,q,zR6,temp);
-    mx_mult(p,q,q,zR6,po1,result_1); 
+	/* lambda*theta*lambda' */
+    mx_trans(p,q,lambda,temp);
+    mx_mult(p,q,q,lambda,theta,result_1); 
     mx_mult_diag1(p,q,result_1,temp,result_3);
         
-    dsw = 0.0;
+    omega = 0.0;
     for(i=0;i<p;i++)
-        dsw += (y2eg[i][i]-2*result_2[i]+result_3[i])/g9p[i];
-    dsw /= p;
+        omega += (sampcovg[i][i]-2*result_2[i]+result_3[i])/delta[i];
+    omega /= p;
 	
 	my_free(temp,q); my_free(result_1,p); free(result_2);free(result_3);
 	
-	return dsw;
+	return omega;
 }
 
-double p5M_dsw2(double **zR6, double *g9p, double **kf4, double **y2eg, int p, int q){ 
+double update_omega2(double **lambda, double *delta, double **beta, double **sampcovg, int p, int q){ 
 	
 	int i;
 	double **result_1, *result_2; 
-	double dsw;
+	double omega;
 
 	my_alloc(&result_1,p,p);
 	my_alloc_vec(&result_2,p);
 
-	/* zR6*kf4*y2e */
-    mx_mult(p,q,p,zR6, kf4, result_1);
-    mx_mult_diag1(p,p,result_1, y2eg, result_2);
+	/* lambda*beta*sampcov */
+    mx_mult(p,q,p,lambda, beta, result_1);
+    mx_mult_diag1(p,p,result_1, sampcovg, result_2);
        
-    dsw = 0.0;
+    omega = 0.0;
     for(i=0;i<p;i++)
-        dsw += (y2eg[i][i]-result_2[i])/g9p[i];
-    dsw /= p;
+        omega += (sampcovg[i][i]-result_2[i])/delta[i];
+    omega /= p;
 	
 	my_free(result_1,p); free(result_2); 
 	
-	return dsw;
+	return omega;
 }
 
 
-void p5M_g9p(double *g9p, double **zR6, double *dsw, double ***kf4, double ***y2e, double ***po1, 
+void update_delta(double *delta, double **lambda, double *omega, double ***beta, double ***sampcov, double ***theta, 
 		double *n, int p, int q, int N, int G){
 
 	int i,g;
@@ -931,23 +919,23 @@ void p5M_g9p(double *g9p, double **zR6, double *dsw, double ***kf4, double ***y2
 	my_alloc(&result_3,G,p);
 	my_alloc_vec(&temp1,p);
 
-	/* zR6*kf4_g*y2e_g */
+	/* lambda*beta_g*sampcov_g */
     for(g=0;g<G;g++){
-		mx_mult(p,q,p,zR6, kf4[g], result_1);
-       	mx_mult_diag1(p,p,result_1, y2e[g], result_2[g]);
+		mx_mult(p,q,p,lambda, beta[g], result_1);
+       	mx_mult_diag1(p,p,result_1, sampcov[g], result_2[g]);
     }
 	
-	/* zR6*po1_g*zR6' */
+	/* lambda*theta_g*lambda' */
     for(g=0;g<G;g++){
-		mx_trans(p,q,zR6,temp);
-       	mx_mult(p,q,q,zR6,po1[g],result_1); 
+		mx_trans(p,q,lambda,temp);
+       	mx_mult(p,q,q,lambda,theta[g],result_1); 
        	mx_mult_diag1(p,q,result_1,temp,result_3[g]);
 	}
 	
     for(i=0;i<p;i++){
         temp1[i] = 0.0;
 	    for(g=0;g<G;g++)
-		    temp1[i] += (y2e[g][i][i]-2.0*result_2[g][i]+result_3[g][i])*n[g]/dsw[g];
+		    temp1[i] += (sampcov[g][i][i]-2.0*result_2[g][i]+result_3[g][i])*n[g]/omega[g];
 	    lagrange += log(temp1[i]);
 	}	
 	
@@ -957,13 +945,13 @@ void p5M_g9p(double *g9p, double **zR6, double *dsw, double ***kf4, double ***y2
 	lagrange -= (double)N; 
 	lagrange /= (double)2; 
 
-	for(i=0;i<p;i++) g9p[i] = temp1[i]/((double)N+(2.0*lagrange));
+	for(i=0;i<p;i++) delta[i] = temp1[i]/((double)N+(2.0*lagrange));
 		
 	my_free(temp,q); my_free(result_1,p); my_free(result_2,G); 
 	my_free(result_3,G); free(temp1);
 }
 
-void p5M_g9p2(double *g9p, double ***zR6, double *dsw, double ***kf4, double ***y2e, double ***po1, 
+void update_delta2(double *delta, double ***lambda, double *omega, double ***beta, double ***sampcov, double ***theta, 
 		double *n, int p, int q, int N, int G){
 
 	int i,g;
@@ -974,23 +962,23 @@ void p5M_g9p2(double *g9p, double ***zR6, double *dsw, double ***kf4, double ***
 	my_alloc(&result_3,G,p);
 	my_alloc_vec(&temp1,p);
 
-	/* zR6*kf4_g*y2e_g */
+	/* lambda*beta_g*sampcov_g */
     for(g=0;g<G;g++){
-		mx_mult(p,q,p,zR6[g], kf4[g], result_1);
-       	mx_mult_diag1(p,p,result_1, y2e[g], result_2[g]);
+		mx_mult(p,q,p,lambda[g], beta[g], result_1);
+       	mx_mult_diag1(p,p,result_1, sampcov[g], result_2[g]);
     }
 	
-	/* zR6*po1_g*zR6' */
+	/* lambda*theta_g*lambda' */
     for(g=0;g<G;g++){
-		mx_trans(p,q,zR6[g],temp);
-        mx_mult(p,q,q,zR6[g],po1[g],result_1); 
+		mx_trans(p,q,lambda[g],temp);
+        mx_mult(p,q,q,lambda[g],theta[g],result_1); 
         mx_mult_diag1(p,q,result_1,temp,result_3[g]);
 	}
 	
     for(i=0;i<p;i++){
         temp1[i] = 0.0;
 	    for(g=0;g<G;g++)
-		temp1[i] += ((y2e[g][i][i]-2*result_2[g][i]+result_3[g][i])*n[g]/dsw[g]);
+		temp1[i] += ((sampcov[g][i][i]-2*result_2[g][i]+result_3[g][i])*n[g]/omega[g]);
 	    lagrange_alt += log(temp1[i]);
 	}	
 	
@@ -1001,14 +989,14 @@ void p5M_g9p2(double *g9p, double ***zR6, double *dsw, double ***kf4, double ***
 	lagrange_alt /= 2; 
 	
 	for(i=0;i<p;i++)
-	    g9p[i] = temp1[i]/(N+(2*lagrange_alt)); 
+	    delta[i] = temp1[i]/(N+(2*lagrange_alt)); 
 	
 	my_free(temp,q); my_free(result_1,p); my_free(result_2,G); 
 	my_free(result_3,G); free(temp1);
 }
 
-/* dsw not a vector */
-void p5M_g9p3(double *g9p, double **zR6, double dsw, double **kf4, double **y2e, double **po1, 
+/* Omega not a vector */
+void update_delta3(double *delta, double **lambda, double omega, double **beta, double **sampcov, double **theta, 
 		double n, int p, int q){
 
 	int i;
@@ -1020,27 +1008,27 @@ void p5M_g9p3(double *g9p, double **zR6, double dsw, double **kf4, double **y2e,
 	my_alloc_vec(&result_3,p);
 	my_alloc_vec(&temp1,p);
 
-	/* zR6*kf4_g*y2e_g */
-    mx_mult(p,q,p,zR6, kf4, result_1);
-    mx_mult_diag1(p,p,result_1, y2e, result_2);
+	/* lambda*beta_g*sampcov_g */
+    mx_mult(p,q,p,lambda, beta, result_1);
+    mx_mult_diag1(p,p,result_1, sampcov, result_2);
        		
-	/* zR6*po1_g*zR6' */
-    mx_trans(p,q,zR6,temp);
-    mx_mult(p,q,q,zR6,po1,result_1); 
+	/* lambda*theta_g*lambda' */
+    mx_trans(p,q,lambda,temp);
+    mx_mult(p,q,q,lambda,theta,result_1); 
     mx_mult_diag1(p,q,result_1,temp,result_3);
 		
-    for(i=0;i<p;i++) temp1[i] = y2e[i][i]-2*result_2[i]+result_3[i];
+    for(i=0;i<p;i++) temp1[i] = sampcov[i][i]-2*result_2[i]+result_3[i];
 	
 	for(i=0;i<p;i++) lagrange += log(temp1[i]);
 		
 	/* Compute Lagrange Multiplier */
 	lagrange /= p; 
 	lagrange = exp(lagrange);
-	lagrange /= dsw;
+	lagrange /= omega;
 	lagrange -= 1; 
 	lagrange *= (n/2); 
 
-	for(i=0;i<p;i++) g9p[i] = temp1[i]/((1+(2*lagrange/n))*dsw);
+	for(i=0;i<p;i++) delta[i] = temp1[i]/((1+(2*lagrange/n))*omega);
 		
 	my_free(temp,p); my_free(result_1,p); free(result_2); 
 	free(result_3); free(temp1);

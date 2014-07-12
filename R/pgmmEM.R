@@ -68,10 +68,10 @@ init_load<-function(x4,z4,G4,p4,q4){
     } 
     psi[[3]]<-rowMeans(psi_tmp)
     psi[[4]]<-as.vector(t(psi_tmp))
-    psi[[9]]<-psi[[3]]
-    psi[[10]]<-psi[[7]]
-    psi[[11]]<-psi[[1]]
-    psi[[12]]<-psi[[5]]
+    psi[[9]]<-c(psi[[3]],rep(0,p4))
+    psi[[10]]<-c(psi[[7]],rep(0,p4))
+    psi[[11]]<-c(psi[[1]],rep(0,(G4*p4)))
+    psi[[12]]<-c(psi[[5]],rep(0,(G4*p4)))
     
     lambda[["psi"]]<-psi
     lambda
@@ -110,13 +110,13 @@ endPrint<-function(icl,zstart,loop,m_best,q_best,G_best,bic_best,class_ind){
         }
     }        
 }
-pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL,qmax=2,qmin=1,Gmax=2,Gmin=1,modelSubset=NULL,seed=123456,tol=0.1,relax=FALSE){
+pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL,modelSubset=NULL,seed=123456,tol=0.1,relax=FALSE){
 	set.seed(seed)
 	x<-as.matrix(x)
-	run_pgmm<-function(x,z,bic,cls,q,p,G,N,model,cluster,lambda,psi,TOL=tol){
-		p4<-.C("pgmm_c",as.double(x),as.double(z),as.double(bic),as.integer(cls),as.integer(q),as.integer(p),as.integer(G),as.integer(N),
+	run_pgmm<-function(x,z,bic,cls,q8,p,G8,N,model,cluster,lambda,psi,TOL=tol){
+		p4<-.C("pgmm_c",as.double(x),as.double(z),as.double(bic),as.integer(cls),as.integer(q8),as.integer(p),as.integer(G8),as.integer(N),
 			   as.integer(model),as.integer(cluster),as.double(lambda),as.double(psi),as.double(TOL),PACKAGE="pgmm")
-		list(p4[[2]],p4[[3]])
+		list(p4[[2]],p4[[3]],p4[[11]],p4[[12]])
 	}
 	is.int<-function(no){
 		abs(no-round(no))<1e-15
@@ -129,6 +129,10 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 	bic_out<-list()
 	if(!is.null(zlist)||zstart==3){if(!is.list(zlist)){stop("Expected a list for zlist.")}}
 	if(!is.null(class)){if(any(!is.double(class))&any(!is.int(class))){stop("The vector class may contain integers only.")}}
+	Gmin<-rG[1]
+	Gmax<-rG[length(rG)]
+	qmin<-rq[1]
+	qmax<-rq[length(rq)]
 	G_offset<-Gmin-1
 	q_offset<-qmin-1
 	N<-dim(x)[1]
@@ -137,7 +141,7 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 	bic_max<--Inf
 	bic_best<--Inf
 	if(!is.null(zlist)){
-		for(g1 in Gmin:Gmax){
+		for(g1 in rG){
 			if(g1>1){
 				if((any(!is.integer(zlist[[g1]])))){stop("Each element of zlist (G>1) must contain integers only.");}
 				if(length(zlist[[g1]])!=N){stop("Each element of zlist (G>1) must have length equal to the number of samples.");}
@@ -146,9 +150,9 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 	}
 	test_paras<-c(qmax,qmin,Gmax,Gmin)
 	if(!is.null(class))if(length(class)!=N){stop("The vector class must have length equal to the number of samples.");}
-	if(any(!is.double(test_paras))&any(!is.integer(test_paras))){stop("The parameters qmax, qmin, Gmax, Gmin take integer values only.")}
-	if(Gmax<Gmin){stop("Gmax<Gmin");}
-	if(qmax<qmin){stop("qmax<qmin");}
+	if(any(!is.double(test_paras))&any(!is.integer(test_paras))){stop("The parameters rG and rq take ranges of integer values only.")}
+	if(Gmax<Gmin){stop("The first element in the range rG is larger than the last.");}
+	if(qmax<qmin){stop("The first element in the range rq is larger than the last.");}
 	if(!relax){
         if(qmax>p/2){stop("qmax>p/2 is not allowed; set relax=TRUE to relax this constraint.");}
     }else{
@@ -159,13 +163,13 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 	if(is.null(class)){class<-rep(0,N);class_ind<-0;}else{class_ind<-1;}
 	for(mod in modelSubset){
 		bic_temp<-matrix(NA,Gmax-Gmin+1,qmax-qmin+1)
-		rownames(bic_temp)<-c(Gmin:Gmax)
-		colnames(bic_temp)<-c(qmin:qmax)	
+		rownames(bic_temp)<-c(rG)
+		colnames(bic_temp)<-c(rq)	
 		bic_out[[mod]]<-bic_temp
 	}
 	if(class_ind){
-        if(max(class)>Gmin){stop("The parameter Gmin cannot be less than max(class).")}
-		for(g1 in Gmin:Gmax){
+        if(max(class)>Gmin){stop("The lowest value in rG cannot be less than max(class).")}
+		for(g1 in rG){
 			zt<-matrix(0,N,g1)
 			cls_ind<-(class==0)
 			for (i in 1:N){
@@ -174,11 +178,11 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 			}
 			z1<-as.vector(t(zt))
 			LAMBDA<-list()
-			for (q1 in qmin:qmax){
+			for (q1 in rq){
 				LAMBDA[[q1-q_offset]]<-init_load(x,zt,g1,p,q1)
 			}		
 			for (m in modelSubset){
-				for (q1 in qmin:qmax){
+				for (q1 in rq){
                     if(substr(m,1,1)=="C"){
                         lam_temp<-LAMBDA[[q1-q_offset]]$tilde
                     }else{
@@ -203,7 +207,7 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
                         if(temp[[2]]>bic_max){
 							z_best<-temp[[1]];bic_best<-temp[[2]];
 							bic_max<-bic_best;G_best<-g1;q_best<-q1;
-							m_best<-m;
+							m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
 						}
 					}
 				}
@@ -213,7 +217,7 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 		bic_start<-matrix(NA,Gmax-Gmin+1,qmax-qmin+1)
 		if(zstart==1){
 			for(l in 1:loop){
-				for(g1 in Gmin:Gmax){
+				for(g1 in rG){
 					z<-matrix(0,N,g1)
                     for(i in 1:N){
                         sum<-0
@@ -227,12 +231,12 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
                     }
 					z1<-as.vector(t(z))
 					LAMBDA<-list()
-					for (q1 in qmin:qmax){
+					for (q1 in rq){
 						LAMBDA[[q1-q_offset]]<-init_load(x,z,g1,p,q1)
 					}
 					if(cccStart){
-                        bic_ccc_max<--Inf
-						for (q1 in qmin:qmax){
+						bic_ccc_max<--Inf
+						for (q1 in rq){
 							temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,1,class_ind,LAMBDA[[q1-q_offset]]$tilde,LAMBDA[[q1-q_offset]]$psi[[1]])
 							bic_start[g1-G_offset,q1-q_offset]<-temp[[2]]
 							if(!is.nan(temp[[2]])){
@@ -257,13 +261,13 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 							}
 						}
 						z_init_mat<-matrix(z_init_best,nrow=N,ncol=g1,byrow=TRUE);						
-						for (q1 in qmin:qmax){
+						for (q1 in rq){
 							LAMBDA[[q1-q_offset]]<-init_load(x,z_init_mat,g1,p,q1)
 						}
 						z1<-as.vector(t(z_init_mat))
 					}
                     for (m in modelSubset){
-                        for (q1 in qmin:qmax){
+                        for (q1 in rq){
                             if(substr(m,1,1)=="C"){
                                 lam_temp<-LAMBDA[[q1-q_offset]]$tilde
                             }else{
@@ -288,7 +292,7 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
                                 if(temp[[2]]>bic_max){
                                     z_best<-temp[[1]];bic_best<-temp[[2]];
                                     bic_max<-bic_best;G_best<-g1;q_best<-q1;
-                                    m_best<-m;
+                                    m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
                                 }
                             }
                         }
@@ -296,13 +300,13 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 				}
 			}
 		}else if((zstart==2)||(zstart==3)){
-			for(g1 in Gmin:Gmax){
+			for(g1 in rG){
 				z<-matrix(0,N,g1)
 				if(zstart==3){
 					if(g1==1){z_ind<-c(rep(1,N))}
 					else {z_ind<-zlist[[g1]]}
 				}
-                if(zstart==2){
+				if(zstart==2){
 					if(g1==1){z_ind<-c(rep(1,N))}
 					else{set.seed(123456);z_ind<-kmeans(x,g1,nstart=5)$cluster;}
 				}
@@ -310,12 +314,12 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 					z[i,z_ind[i]]<-1	
 				}
 				LAMBDA<-list()
-				for (q1 in qmin:qmax){
+				for (q1 in rq){
 					LAMBDA[[q1-q_offset]]<-init_load(x,z,g1,p,q1)
 				}
 				z1<-as.vector(t(z))
 				for (m in modelSubset){
-					for (q1 in qmin:qmax){
+					for (q1 in rq){
 						if(substr(m,1,1)=="C"){
 							lam_temp<-LAMBDA[[q1-q_offset]]$tilde
 						}else{
@@ -340,7 +344,7 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
 							if(temp[[2]]>bic_max){
 								z_best<-temp[[1]];bic_best<-bic_out[[m]][g1-G_offset,q1-q_offset];
 								bic_max<-bic_best;G_best<-g1;q_best<-q1;
-								m_best<-m;
+								m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
 							}
 						}
 					}
@@ -351,15 +355,54 @@ pgmmEM<-function(x,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loop=3,zlist=NULL
         }
 	}
 	z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
-	class_best<-rep(0,N)
+	if(substr(m_best,1,1)=="C"){
+        lambda_mat<-matrix(lambda_best,nrow=p,ncol=q_best,byrow=TRUE)
+    }else{
+        lambda_mat<-NULL;
+        for(g1 in 1:G_best){
+            upper<-(q_best*p)*g1;
+            lambda_mat[[g1]]<-matrix(lambda_best[(upper-(p*q_best-1)):upper],nrow=p,ncol=q_best,byrow=TRUE);
+        }
+    }
+    if((m_best=="CUU")||(m_best=="UUU")){
+        psi_mat<-list()
+        for(g1 in 1:G_best){
+            upper<-p*g1;
+            psi_mat[[g1]]<-diag(psi_best[(upper-p+1):upper]);
+        }
+    }else if((m_best=="CCC")||(m_best=="UCC")){
+        psi_mat<-psi_best[1];
+    }else if((m_best=="CCU")||(m_best=="UCU")){
+        psi_mat<-psi_best[1:p];
+    }else if((m_best=="CUC")||(m_best=="UUC")){
+        psi_mat<-list()
+        for(g1 in 1:G_best){
+            psi_mat[[g1]]<-psi_best[g1];
+        }
+    }else if((m_best=="CCUU")||(m_best=="UCUU")){
+        psi_mat<-list();
+        psi_mat[["omega"]]<-psi_best[1:G_best];
+        psi_mat[["delta"]]<-diag(psi_best[(G_best+1):(G_best+p)]);
+    }else if((m_best=="CUCU")||(m_best=="UUCU")){
+        psi_mat<-list();
+        psi_mat[["omega"]]<-psi_best[1];
+        for(g1 in 1:G_best){
+            temp_string<-paste("delta",toString(g1),sep="");
+            lower<-2+(g1-1)*p
+            psi_mat[[temp_string]]<-diag(psi_best[lower:(lower+p-1)]);
+        }
+    }
+    
+    z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
+    class_best<-rep(0,N)
 	for(i in 1:N){
 		class_best[i]<-which(z_mat[i,1:G_best]==max(z_mat[i,1:G_best]))
 	}
     endPrint(icl,zstart,loop,m_best,q_best,G_best,bic_best,class_ind)
 	if(!icl){
-		foo<-list(map=class_best,model=m_best,g=G_best,q=q_best,bic=bic_out,z_hat=z_mat,plot_info=list(Gmin,Gmax,modelSubset,icl),summ_info=list(icl,zstart,loop,bic_best,class_ind))
+		foo<-list(map=class_best,model=m_best,g=G_best,q=q_best,bic=bic_out,zhat=z_mat,load=lambda_mat,noisev=psi_mat,plot_info=list(Gmin,Gmax,modelSubset,icl),summ_info=list(icl,zstart,loop,bic_best,class_ind))
 	}else{
-		foo<-list(map=class_best,model=m_best,g=G_best,q=q_best,icl=bic_out,z_hat=z_mat,plot_info=list(Gmin,Gmax,modelSubset,icl),summ_info=list(icl,zstart,loop,bic_best,class_ind))
+		foo<-list(map=class_best,model=m_best,g=G_best,q=q_best,icl=bic_out,zhat=z_mat,load=lambda_mat,noisev=psi_mat,plot_info=list(Gmin,Gmax,modelSubset,icl),summ_info=list(icl,zstart,loop,bic_best,class_ind))
 	}
     class(foo)<-"pgmm"
     foo

@@ -1,0 +1,6 @@
+pgmm version 1.1 2014-07-12:
+
+- Memory allocation issues resolved
+- Arguments Gmin and Gmax replaced by argument rG (in effect, rG=Gmin:Gmax)
+- Arguments qmin and qmax replaced by argument rq (in effect, rq=qmin:qmax)
+- Values of Lambda and Psi now returned for the chosen model

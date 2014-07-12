@@ -14,16 +14,6 @@ citEntry(entry="Manual",
               textVersion = paste("Paul D. McNicholas, K. Raju Jampani, Aaron F. McDaid, T. Brendan Murphy and Larry Banks (", year, "). pgmm: Parsimonious Gaussian Mixture Models. ", vers, ".", sep="")
 )
 
-citEntry(entry = "TechReport",
-     	title = "pgmm Version 1.0 for R: Model-based clustering and classification via latent Gaussian mixture models",
-     	author = personList(as.person("Paul D. McNicholas"),as.person("T. Brendan Murphy"),as.person("K. Raju Jampani"),as.person("Aaron F. McDaid"),as.person("Larry Banks")),
-	textVersion = paste("Paul D. McNicholas, K. Raju Jampani, Aaron F. McDaid, T. Brendan Murphy, Larry Banks. (2011). pgmm Version 1.0 for R: Model-based clustering and classification via latent Gaussian mixture models. Technical Report 2011-320, Department of Mathematics and Statistics, University of Guelph, Ontario, Canada."),
-     	year = "2011",
-     	institution = "Department of Mathematics and Statistics, University of Guelph",
-	address = "Ontario, Canada",
-	number = "2011-320",
-)
-
 citEntry(entry = "Article",
      	title = "Model-Based Clustering of Microarray Expression Data via Latent Gaussian Mixture Models",
      	author = personList(as.person("Paul D. McNicholas"),as.person("T. Brendan Murphy")),

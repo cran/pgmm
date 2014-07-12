@@ -4,69 +4,85 @@
 #include<R.h>
 #include "functions.h"
 
-void generate_identity(int N, double **c21){
+void generate_identity(int N, double **matrix){
     int i, j;
     for (i = 0; i < N; i ++)
         for (j = 0; j < N; j ++){
-            c21[i][j] = 0;
-            if(i==j) c21[i][i]=1;
+            matrix[i][j] = 0;
+            if(i==j) matrix[i][i]=1;
         }
 }
 
-void GaussJordan(int N, double **c21, double **a8e, double *det){
+void GaussJordan(int N, double **MATRIX, double **INVERSE, double *det){
+    /* use generate_identity function to make INVERSE the identity. Then call 
+     * GaussJordan with MATRIX the matrix to invert. MATRIX gets turned into 
+     * the identity, so make a copy if you need to keep it. N is the dimension 
+     * of the matrix.*/ 
     int c, r, r_max, j, sign;
-    double temp, v_v, v_max, q7j = 0.0;
-    generate_identity(N, a8e); det[0]=1; sign=0;
+    double temp, v_v, v_max, factor = 0.0;
+    generate_identity(N, INVERSE); det[0]=1; sign=0;
     
+    /* Loop over all columns of A */
     for (c = 0; c < N; c++){
+    /* Find row with the maximum value absolute value. */ 
         r_max = c;
-        v_max = fabs(c21[c][c]);
+        v_max = fabs(MATRIX[c][c]);
         for (r = c + 1; r < N; r++){
-            v_v = fabs(c21[r][c]);
+            v_v = fabs(MATRIX[r][c]);
             if (v_v > v_max){
                 r_max = r;
                 v_max = v_v;
             }
         } 
+        /* Switch rows if necessary */  
         if (r_max != c){
             for (j = c; j < N; j++){
-                temp = c21[c][j];
-                c21[c][j] = c21[r_max][j];
-                c21[r_max][j] = temp;
+                temp = MATRIX[c][j];
+                MATRIX[c][j] = MATRIX[r_max][j];
+                MATRIX[r_max][j] = temp;
             } 
             for (j = 0; j < N; j++){
-                temp = a8e[c][j];
-                a8e[c][j] = a8e[r_max][j];
-                a8e[r_max][j] = temp;
+                temp = INVERSE[c][j];
+                INVERSE[c][j] = INVERSE[r_max][j];
+                INVERSE[r_max][j] = temp;
             }
             sign++;
         }       
-        q7j = c21[c][c];
+        /* Rescale current row so that diagonal element is 1 */ 
+        factor = MATRIX[c][c];
         
-        det[0]*= q7j;
+        det[0]*= factor;
+        /* printf("factor_Prod[%d]=%f\n",c,det[0]); */
+        
+        /*if (fabs(factor) == 0){
+            printf("Matrix cannot be inverted.\n");
+        }*/ 
         for (j = c; j < N; j++){
-            c21[c][j] /= q7j;
+            MATRIX[c][j] /= factor;
         } 
         for (j = 0; j < N; j++){
-            a8e[c][j] /= q7j;
+            INVERSE[c][j] /= factor;
         } 
+        /* Subtract current row from all rows below. */
         for (r = c + 1; r < N; r++){
-            q7j = c21[r][c];
+            factor = MATRIX[r][c];
             for (j = c; j < N; j++)
-                c21[r][j] -= q7j * c21[c][j];
+                MATRIX[r][j] -= factor * MATRIX[c][j];
             for (j = 0; j < N; j++)
-                a8e[r][j] -= q7j * a8e[c][j];
+                INVERSE[r][j] -= factor * INVERSE[c][j];
         }
     }
         
     if(sign%2 != 0) det[0] *= -1; 
     
+    /*loop over all rows from 1 to end*/
     for (c = 1; c < N; c++){
+        /* Subtract current row from all rows above. */
         for (j = 0; j < N-c; j++){
-            q7j = c21[j][N-c];
+            factor = MATRIX[j][N-c];
             for (r = 0; r < N; r++){
-                c21[j][r] =c21[j][r] - q7j * c21[N-c][r];
-                a8e[j][r] =a8e[j][r] - q7j * a8e[N-c][r];
+                MATRIX[j][r] =MATRIX[j][r] - factor * MATRIX[N-c][r];
+                INVERSE[j][r] =INVERSE[j][r] - factor * INVERSE[N-c][r];
             }
         }
     }
@@ -128,7 +144,7 @@ void mx_vec_mult(int n, int q, double *a, double **b, double *r){
         }
 }
 
-/* Function to find the transpose of an m*n c21 A; R=A' */
+/* Function to find the transpose of an m*n matrix A; R=A' */
 void mx_trans(int m, int n, double **a, double **r){
     int i,j;
     for(i=0; i<n; i++)
@@ -223,7 +239,7 @@ void str_mx_mult(int m, int n, int q, double **A, int ax, int ay, double **B, in
     double **P1, **P2, **P3, **P4, **P5, **P6, **P7;
     double u1, u2, u3, u4, u5, u6, u7;
     
-    if(((m>40)&&(q>40))||(n>40)) {
+    if(((m>40)&&(q>40))||(n>40)) { /* Might be best to modify this also */
         std_mx_mult(m, n, q, A, ax, ay, B, bx, by, R);
         return;
     }
