@@ -4,16 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include "functions.h"
-
+#include "time.h"
 funcType funcs[13] = {NULL, aecm,aecm2,aecm3,aecm4,aecm5,aecm6,aecm7,aecm8,aecm9,aecm10,aecm11,aecm12};
 funcType2 funcs2[13] = {NULL, claecm,claecm2,claecm3,claecm4,claecm5,claecm6,claecm7,claecm8,claecm9,claecm10,claecm11,claecm12};
 
 void pgmm_c(double *x1, double *z1, double *bic, int *cls, int *q, int *p, int *G, int *N, int *model, int *clust, double *lambda, double *psi, double *tol){
-	double **x, **z;
     funcType func;
     funcType2 func2;
-	my_alloc(&x,*N,*p);
-    my_alloc(&z,*N,*G);
+    int NN, pp, GG;
+    NN = *N;
+    pp = *p;
+    GG = *G;
+    double *x = malloc(sizeof(double)*NN*pp);
+    double *z = malloc(sizeof(double)*NN*GG);
     get_data(x1,x,*N,*p);
     get_data(z1,z,*N,*G);
 	
@@ -26,10 +29,10 @@ void pgmm_c(double *x1, double *z1, double *bic, int *cls, int *q, int *p, int *
 	}
 	
     give_data(z1,z,*N,*G);
-    my_free(x,*N); my_free(z,*N);
+      free(x); free(z);    
 }
 
-int convergtest_NEW(double *l, double *at, double *v_max, double **v, int N, int it, int G, double TOL){
+int convergtest_NEW(double *l, double *at, double *v_max, double *v, int N, int it, int G, double TOL){
 	int i,g, flag=0;
 	double sum, l_inf;
 
@@ -37,7 +40,7 @@ int convergtest_NEW(double *l, double *at, double *v_max, double **v, int N, int
     for(i=0; i<N; i++){
         sum=0.0; 
         for(g=0; g<G; g++){
-            sum += exp(v[i][g]-v_max[i]);
+            sum += exp(v[i*G+g]-v_max[i]);
 	    }
 		l[it] += log(sum)+v_max[i];
 	    if(isnan(l[it])||isinf(l[it])) return -1;
@@ -57,47 +60,45 @@ int convergtest_NEW(double *l, double *at, double *v_max, double **v, int N, int
 	return flag;
 }
 
-void get_data(double *x1, double **x, int n, int m){
+void get_data(double *x1, double *x, int n, int m){
    int i,j,k;
    i=0;j=0;k=0; 
    for (i=0;i<n;i++){
 	  for (j=0;j<m;j++){
-		 x[i][j]=x1[k];
+		 x[i*m+j]=x1[k];
 		 k++;
 	  }
    }
 }
 
-void get_data2(double *x1, double ***x, int G, int n, int m){
-   int g,i,j,k=0;
+void get_data2(double *x1, double **x, int G, int n, int m){
+   int g,i,k=0;
    for (g=0;g<G;g++){
-	for (i=0;i<n;i++){
-	  for (j=0;j<m;j++){
-		 x[g][i][j]=x1[k];
+	for (i=0;i<n*m;i++){
+		 x[g][i]=x1[k];
 		 k++;
 	  }
 	}
-   }
 }
 
-void give_data(double *x1, double **x, int n, int m){
+void give_data(double *x1, double *x, int n, int m){
 	int i,j,k;
 	i=0;j=0;k=0; 
 	for (i=0;i<n;i++){
 		for (j=0;j<m;j++){
-			x1[k]=x[i][j];
+			x1[k]=x[i*m+j];
 			k++;
 		}
 	}
 }		
 
-void known_z(int *class, double **z, int N, int G){
+void known_z(int *class, double *z, int N, int G){
 	int i,g;
 	for(i=0;i<N;i++){
 		if(class[i]!=0){
 			for(g=1;g<=G;g++){
-				z[i][g-1]=0.0;
-				if(g==class[i]) z[i][g-1]=1.0;
+				z[i*G+g-1]=0.0;
+				if(g==class[i]) z[i*G+g-1]=1.0;
 			}
 		}
 	}

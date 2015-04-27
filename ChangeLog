@@ -1,3 +1,8 @@
+pgmm version 1.2 2015-04-27:
+
+- C code changed for efficiency
+- Bug on the recording of BIC / ICL values fixed
+
 pgmm version 1.1 2014-07-12:
 
 - Memory allocation issues resolved

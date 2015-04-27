@@ -9,16 +9,16 @@ An implementation of model-based clustering and model-based classification using
 \tabular{ll}{
 Package: \tab pgmm\cr
 Type: \tab Package\cr
-Version: \tab 1.1\cr
-Date: \tab 2014-07-12\cr
+Version: \tab 1.2\cr
+Date: \tab 2015-05-27\cr
 License: \tab GPL (>=2)\cr
 }
 This package contains the function \code{\link{pgmmEM}} plus three data sets.
 }
 \author{
-Paul D. McNicholas, K. Raju Jampani, Aaron F. McDaid, T. Brendan Murphy, Larry Banks.
+Paul D. McNicholas [aut, cre], Aisha ElSherbiny [aut], K. Raju Jampani [ctb], Aaron McDaid [aut], Brendan Murphy [aut], Larry Banks [ctb].
 
-Maintainer: Paul McNicholas <mcnicholas@math.mcmaster.ca>
+Maintainer: Paul D. McNicholas <mcnicholas@math.mcmaster.ca>
 }
 \seealso{
 Details, examples, and references are given under \code{\link{pgmmEM}}.

@@ -1,5 +1,7 @@
 .packageName<-'pgmm'
-
+system.time({
+m_best <-NA
+G_best<-0
 init_load<-function(x4,z4,G4,p4,q4){
     sampcov<-list(); 
     for(g in 1:G4){sampcov[[g]]<-matrix(0,p4,p4);}
@@ -275,9 +277,8 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
                             }
                             psi_temp<-LAMBDA[[q1-q_offset]]$psi[[model_num[m]]]
                             temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,model_num[m],class_ind,lam_temp,psi_temp)
-                            bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
                             if(!is.nan(temp[[2]])){
-                                if(icl&(g1>1)){
+                            	if(icl&(g1>1)){
                                     z_mat_tmp<-matrix(temp[[1]],nrow=N,ncol=g1,byrow=TRUE)
                                     mapZ<-rep(0,N)
                                     for(i9 in 1:N){
@@ -287,8 +288,15 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
                                     for(i9 in 1:N){
                                         icl2<-icl2+log(z_mat_tmp[i9,mapZ[i9]])
                                     }
-                                    bic_out[[m]][g1-G_offset,q1-q_offset]<-bic_out[[m]][g1-G_offset,q1-q_offset]+icl2
+                                    temp[[2]]<-temp[[2]]+icl2
                                 }
+                                if(l==1){
+                            		bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
+                            	}else if(is.na(bic_out[[m]][g1-G_offset,q1-q_offset])){
+                            		bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
+                            	}else if(bic_out[[m]][g1-G_offset,q1-q_offset]<temp[[2]]){
+                            		bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
+                            	}
                                 if(temp[[2]]>bic_max){
                                     z_best<-temp[[1]];bic_best<-temp[[2]];
                                     bic_max<-bic_best;G_best<-g1;q_best<-q1;
@@ -343,10 +351,13 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 							}
 							if(temp[[2]]>bic_max){
 								z_best<-temp[[1]];bic_best<-bic_out[[m]][g1-G_offset,q1-q_offset];
+#	                                                        z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
 								bic_max<-bic_best;G_best<-g1;q_best<-q1;
+	                                                        z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
 								m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
 							}
-						}
+						}else{z_mat<-NULL}
+                                             
 					}
 				}
 			}
@@ -354,7 +365,9 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
             stop("Invalid entry for zstart: 1 random; 2 k-means; 3 user-specified list.")
         }
 	}
-	z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
+#	z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
+#        if((!is.nan(temp[[2]]))&temp[[2]]>bic_max){ 
+        if((!is.nan(temp[[2]]))){ 
 	if(substr(m_best,1,1)=="C"){
         lambda_mat<-matrix(lambda_best,nrow=p,ncol=q_best,byrow=TRUE)
     }else{
@@ -392,8 +405,10 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
             psi_mat[[temp_string]]<-diag(psi_best[lower:(lower+p-1)]);
         }
     }
-    
     z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
+  }else{z_mat=NULL  
+}
+    if(G_best >0){
     class_best<-rep(0,N)
 	for(i in 1:N){
 		class_best[i]<-which(z_mat[i,1:G_best]==max(z_mat[i,1:G_best]))
@@ -406,7 +421,8 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 	}
     class(foo)<-"pgmm"
     foo
-}
+} else{stop}
+  }
 summary.pgmm<-function(object,...){
     a<-object$summ_info[[1]]
     b<-object$summ_info[[2]]
@@ -464,3 +480,4 @@ plot.pgmm<-function(x,onlyAll=FALSE,...){
         }
 	}
 }
+})

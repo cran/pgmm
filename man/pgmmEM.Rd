@@ -71,9 +71,9 @@ In addition, the object will contain one of the following, depending on the valu
 Dedicated \code{print}, \code{plot}, and \code{summary} functions are available for objects of class \code{pgmm}.
 }
 \author{
-Paul D. McNicholas, K. Raju Jampani, Aaron F. McDaid, T. Brendan Murphy, Larry Banks.
+Paul D. McNicholas [aut, cre], Aisha ElSherbiny [aut], K. Raju Jampani [ctb], Aaron McDaid [aut], Brendan Murphy [aut], Larry Banks [ctb]
 
-Maintainer: Paul McNicholas <mcnicholas@math.mcmaster.ca>
+Maintainer: Paul D. McNicholas <mcnicholas@math.mcmaster.ca>
 }
 \references{
 Paul D. McNicholas and T. Brendan Murphy (2010). Model-based clustering of microarray expression data via latent Gaussian mixture models. \emph{Bioinformatics} \bold{26}(21), 2705-2712.
@@ -109,7 +109,7 @@ Paul D. McNicholas and T. Brendan Murphy (2005). Parsimonious Gaussian mixture m
  print(wine_clust2)
  summary(wine_clust2)
 
-# Olive oil classification by region (there are three regionss), with two-thirds of
+# Olive oil classification by region (there are three regions), with two-thirds of
 # the observations taken as having known group memberships, using the CUC, CUU and 
 # UCU models. 
  data("olive") 

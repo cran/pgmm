@@ -3,17 +3,24 @@
 #include <math.h>
 #include<R.h>
 #include "functions.h"
+#ifdef __APPLE__
+#include <Accelerate/Accelerate.h>
+#else
+#include <R_ext/Lapack.h>
+#include <R_ext/BLAS.h>
+#endif
 
-void generate_identity(int N, double **matrix){
+
+void generate_identity(int N, double *matrix){
     int i, j;
     for (i = 0; i < N; i ++)
         for (j = 0; j < N; j ++){
-            matrix[i][j] = 0;
-            if(i==j) matrix[i][i]=1;
+            matrix[i*N+j] = 0;
+            if(i==j) matrix[i*N+i]=1;
         }
 }
 
-void GaussJordan(int N, double **MATRIX, double **INVERSE, double *det){
+void GaussJordan(int N, double *MATRIX, double *INVERSE, double *det){
     /* use generate_identity function to make INVERSE the identity. Then call 
      * GaussJordan with MATRIX the matrix to invert. MATRIX gets turned into 
      * the identity, so make a copy if you need to keep it. N is the dimension 
@@ -26,31 +33,31 @@ void GaussJordan(int N, double **MATRIX, double **INVERSE, double *det){
     for (c = 0; c < N; c++){
     /* Find row with the maximum value absolute value. */ 
         r_max = c;
-        v_max = fabs(MATRIX[c][c]);
+        v_max = fabs(MATRIX[c*N+c]);
         for (r = c + 1; r < N; r++){
-            v_v = fabs(MATRIX[r][c]);
+            v_v = fabs(MATRIX[c+r*N]);
             if (v_v > v_max){
                 r_max = r;
                 v_max = v_v;
             }
         } 
+ //First section
         /* Switch rows if necessary */  
         if (r_max != c){
             for (j = c; j < N; j++){
-                temp = MATRIX[c][j];
-                MATRIX[c][j] = MATRIX[r_max][j];
-                MATRIX[r_max][j] = temp;
+                temp = MATRIX[c*N+j];
+                MATRIX[c*N+j] = MATRIX[r_max*N+j];
+                MATRIX[r_max*N+j] = temp;
             } 
             for (j = 0; j < N; j++){
-                temp = INVERSE[c][j];
-                INVERSE[c][j] = INVERSE[r_max][j];
-                INVERSE[r_max][j] = temp;
+                temp = INVERSE[c*N+j];
+                INVERSE[c*N+j] = INVERSE[r_max*N+j];
+                INVERSE[r_max*N+j] = temp;
             }
             sign++;
         }       
         /* Rescale current row so that diagonal element is 1 */ 
-        factor = MATRIX[c][c];
-        
+        factor = MATRIX[c*N+c];
         det[0]*= factor;
         /* printf("factor_Prod[%d]=%f\n",c,det[0]); */
         
@@ -58,18 +65,19 @@ void GaussJordan(int N, double **MATRIX, double **INVERSE, double *det){
             printf("Matrix cannot be inverted.\n");
         }*/ 
         for (j = c; j < N; j++){
-            MATRIX[c][j] /= factor;
+            MATRIX[c*N+j] /= factor;
         } 
         for (j = 0; j < N; j++){
-            INVERSE[c][j] /= factor;
+            INVERSE[c*N+j] /= factor;
         } 
         /* Subtract current row from all rows below. */
         for (r = c + 1; r < N; r++){
-            factor = MATRIX[r][c];
-            for (j = c; j < N; j++)
-                MATRIX[r][j] -= factor * MATRIX[c][j];
+            factor = MATRIX[c+r*N];
+            for (j = c; j < N; j++){
+                MATRIX[r*N+j] -= factor * MATRIX[c*N+j];
+            }
             for (j = 0; j < N; j++)
-                INVERSE[r][j] -= factor * INVERSE[c][j];
+                INVERSE[r*N+j] -= factor * INVERSE[c*N+j];
         }
     }
         
@@ -79,77 +87,71 @@ void GaussJordan(int N, double **MATRIX, double **INVERSE, double *det){
     for (c = 1; c < N; c++){
         /* Subtract current row from all rows above. */
         for (j = 0; j < N-c; j++){
-            factor = MATRIX[j][N-c];
+            factor = MATRIX[N-c+j*N];
             for (r = 0; r < N; r++){
-                MATRIX[j][r] =MATRIX[j][r] - factor * MATRIX[N-c][r];
-                INVERSE[j][r] =INVERSE[j][r] - factor * INVERSE[N-c][r];
+                MATRIX[j*N+r] =MATRIX[j*N+r] - factor * MATRIX[(N-c)*N+r];
+                INVERSE[j*N+r] =INVERSE[j*N+r] - factor * INVERSE[(N-c)*N+r];
             }
         }
-    }
+    } 
 }
 
 /* Function to find mx R = AB */
-void mx_mult(int m, int n, int q, double **a, double **b, double **r){
-    int i,j,k;
+void mx_mult(int m, int n, int q, double *a, double *b, double *r){
+    char notrans = 'N';
+    double alpha = 1.0f;
+    double beta = 0.0f;
     
-    if(((m>40)&&(q>40))||(n>40)){
-        /*Rprintf("Computing Strassen's\n");*/
-        str_mx_mult(m, n, q, a, 0, 0, b, 0, 0, r);
-    } else {
-        for(i=0; i<m; i++)
-            for(j=0; j<q; j++) {
-                r[i][j]=0.0;
-                for(k=0; k<n; k++)
-                    r[i][j] += a[i][k]*b[k][j];
-            }
-    }
+    dgemm_(&notrans,&notrans, &q, &m, &n, &alpha, b, &q, a, &n, &beta, r, &q);
+    
 }
 
 /* NEW Function to find the DIAGONAL of a mx R = AB */
-void mx_mult_diag1(int m, int n, double **a, double **b, double *r){
+void mx_mult_diag1(int m, int n, double *a, double *b, double *r){
     int i,k;
     for(i=0; i<m; i++){
 			r[i]=0.0;
             for(k=0; k<n; k++)
-                r[i] += a[i][k]*b[k][i];
+                r[i] += a[i*n+k]*b[i+k*m];
 	}
 }
 
 /* Function to find the DIAGONAL of a mx R = AB */
-void mx_mult_diag(int m, int n, double **a, double **b, double **r){
+void mx_mult_diag(int m, int n, double *a, double *b, double *r){
     int i,k;
     for(i=0; i<m; i++){
-			r[i][i]=0.0;
+			r[i*m+i]=0.0;
             for(k=0; k<n; k++)
-                r[i][i] += a[i][k]*b[k][i];
+                r[i*m+i] += a[i*n+k]*b[i+k*m];
 	}
 }
 
 /* Function to find r = bA */
-void vec_mx_mult(int n, int q, double *a, double **b, double *r){
+void vec_mx_mult(int n, int q, double *a, double *b, double *r){
 	int j,k;
         for(j=0; j<q; j++){
             r[j]=0.0;
-            	for(k=0; k<n; k++)
-                    r[j] += a[k]*b[k][j];
+            	for(k=0; k<n; k++){
+                    r[j] += a[k]*b[j+k*q];
+                }
         }
 }
 /* Function to find r = Ab */
-void mx_vec_mult(int n, int q, double *a, double **b, double *r){
+void mx_vec_mult(int n, int q, double *a, double *b, double *r){
 	int j,k;
         for(j=0; j<q; j++){
             r[j]=0.0;
             	for(k=0; k<n; k++)
-                    r[j] += a[k]*b[j][k];
+                    r[j] += a[k]*b[j*n+k];
         }
 }
 
 /* Function to find the transpose of an m*n matrix A; R=A' */
-void mx_trans(int m, int n, double **a, double **r){
+void mx_trans(int m, int n, double *a, double *r){
     int i,j;
     for(i=0; i<n; i++)
         for(j=0; j<m; j++)
-            r[i][j]=a[j][i];
+            r[i*m+j]=a[i+j*n];
 }
 
 int maximum(double *z){
@@ -169,17 +171,6 @@ int maxi(double *z, int G){
     return k;
 }
 
-/* Function to allocated memory to a row x col array */
-void mx_alloc(int row, int col, double **a){
-    int i;
-    a = (double **)calloc(row, sizeof(double*));      
-    for (i=0; i<row; i++) a[i] = (double *)calloc(col, sizeof(double));    
-}
-
-/* Function to allocated memory to a row x col array */
-void vec_alloc(int row, double *a){
-    a = (double *)calloc(row, sizeof(double*));      
-}
 
 double maximum_array(double *array, int k){
     int i;
@@ -210,17 +201,17 @@ void release_mx(int nr, double **A) {
     free(A);
 }
 
-void std_mx_mult(int m, int n, int q, double **A, int ax, int ay, double **B, int bx, int by, double **R) {
+void std_mx_mult(int m, int n, int q, double *A, int ax, int ay, double *B, int bx, int by, double *R) {
     int i,j,k;
     for(i=0; i<m; i++)
         for(j=0; j<q; j++){
-            R[i][j]=0.0;
+            R[i*q+j]=0.0;
             for(k=0; k<n; k++)
-                R[i][j] += A[ax+i][ay+k]*B[bx+k][by+j];
+                R[i*q+j] += A[(ax+i)*n+ay+k] * B[by+j +(bx+k)*q];
         }
 }
 
-void str_mx_sum(int diff, int nr, int nc, double **A, int ax, int ay, double **B, int bx, int by, double **R) {
+void str_mx_sum(int diff, int nr, int nc, double *A, int ax, int ay, double *B, int bx, int by, double *R) {
     int i, j;
     int fac = 1;
     
@@ -228,114 +219,11 @@ void str_mx_sum(int diff, int nr, int nc, double **A, int ax, int ay, double **B
         fac = -1;
     for(i=0; i < nr; i++)
         for(j=0; j < nc; j++)
-            R[i][j] = A[ax+i][ay+j] + fac*B[bx+i][by+j];
+            R[i*nc+j] =  A[(ax+i)*nc+ay+j] + fac*B[(bx+i)*nc+by+j];
 }
-
-void str_mx_mult(int m, int n, int q, double **A, int ax, int ay, double **B, int bx, int by, double **R) {
-    int i, j, k;
-    double sum;
-    double **S1, **S2, **S3, **S4;
-    double **T1, **T2, **T3, **T4;
-    double **P1, **P2, **P3, **P4, **P5, **P6, **P7;
-    double u1, u2, u3, u4, u5, u6, u7;
-    
-    if(((m>40)&&(q>40))||(n>40)) { /* Might be best to modify this also */
-        std_mx_mult(m, n, q, A, ax, ay, B, bx, by, R);
-        return;
-    }
-    
-    S1 = init_mx(m/2, n/2);
-    S2 = init_mx(m/2, n/2);
-    S3 = init_mx(m/2, n/2);
-    S4 = init_mx(m/2, n/2);
-    
-    T1 = init_mx(n/2, q/2);
-    T2 = init_mx(n/2, q/2);
-    T3 = init_mx(n/2, q/2);
-    T4 = init_mx(n/2, q/2);
-    
-    P1 = init_mx(m/2, q/2);
-    P2 = init_mx(m/2, q/2);
-    P3 = init_mx(m/2, q/2);
-    P4 = init_mx(m/2, q/2);
-    P5 = init_mx(m/2, q/2);
-    P6 = init_mx(m/2, q/2);
-    P7 = init_mx(m/2, q/2);
-    
-    str_mx_sum(0, m/2, n/2,  A, ax+m/2,   ay+0,  A, ax+m/2, ay+n/2, S1);
-    str_mx_sum(1, m/2, n/2, S1,      0,      0,  A,   ax+0,   ay+0, S2);
-    str_mx_sum(1, m/2, n/2,  A,   ax+0,   ay+0,  A, ax+m/2,   ay+0, S3);
-    str_mx_sum(1, m/2, n/2,  A,   ax+0, ay+n/2, S2,      0,      0, S4);
-    
-    str_mx_sum(1, n/2, q/2, B, bx+0 ,  by+q/2, B,  bx+0,   by+0, T1);
-    str_mx_sum(1, n/2, q/2, B, bx+n/2, by+q/2, T1,    0,      0, T2);
-    str_mx_sum(1, n/2, q/2, B, bx+n/2, by+q/2, B,  bx+0, by+q/2, T3);
-    str_mx_sum(1, n/2, q/2, B, bx+n/2,   by+0, T2,    0,      0, T4);
-    
-    str_mx_mult(m/2, n/2, q/2,  A,     ax,     ay,  B,     bx,      by, P1);
-    str_mx_mult(m/2, n/2, q/2,  A,     ax, ay+n/2,  B, bx+n/2,      by, P2);
-    str_mx_mult(m/2, n/2, q/2, S1,      0,      0, T1,      0,       0, P3);
-    str_mx_mult(m/2, n/2, q/2, S2,      0,      0, T2,      0,       0, P4);
-    str_mx_mult(m/2, n/2, q/2, S3,      0,      0, T3,      0,       0, P5);
-    str_mx_mult(m/2, n/2, q/2, S4,      0,      0,  B, bx+n/2,  by+q/2, P6);
-    str_mx_mult(m/2, n/2, q/2,  A, ax+m/2, ay+n/2, T4,      0,       0, P7);
-    
-    for(i=0; i < m/2; i++) {
-        for(j=0; j < q/2; j++) {
-            u1 = P1[i][j]+P2[i][j];  
-            u2 = P1[i][j]+P4[i][j];
-            u3 = u2 + P5[i][j];
-            u4 = u3 + P7[i][j];
-            u5 = u3 + P3[i][j];
-            u6 = u2 + P3[i][j]; 
-            u7 = u6 + P6[i][j];
-            
-            R[i][j] = u1;
-            R[i][j+q/2]= u7;
-            R[i+m/2][j]= u4;
-            R[i+m/2][j+q/2]= u5;
-        }
-    }
-    
-    if(n%2 == 1) {
-        for(i=0; i < (m/2)*2; i++)
-            for(k=0; k < (q/2)*2; k++)
-                R[i][k] += A[ax+i][ay+n-1]*B[bx+n-1][by+k];
-    }
-    
-    if(m%2 == 1) {
-        for(k=0; k < q; k++) {
-            sum=0;
-            for(j=0; j < n; j++)
-                sum += A[ax+m-1][ay+j]*B[bx+j][by+k];
-            R[m-1][k] = sum;
-        }
-    }
-    
-    if(q%2 == 1) {
-        for(i=0; i < m; i++) {
-            sum=0;
-            for(j=0; j < n; j++)
-                sum += A[ax+i][ay+j]*B[bx+j][by+q-1];
-            R[i][q-1] = sum;
-        }
-    }
-    
-    release_mx(m/2, S1);
-    release_mx(m/2, S2);
-    release_mx(m/2, S3);
-    release_mx(m/2, S4);
-    
-    release_mx(n/2, T1);
-    release_mx(n/2, T2);
-    release_mx(n/2, T3);
-    release_mx(n/2, T4);
-    
-    release_mx(m/2, P1);
-    release_mx(m/2, P2);
-    release_mx(m/2, P3);
-    release_mx(m/2, P4);
-    release_mx(m/2, P5);
-    release_mx(m/2, P6);
-    release_mx(m/2, P7);
-}
+ void init_mat(double *mat, int nr, int nc) {
+     int i,j;
+     for(i=0; i <nr; i++)
+        for(j=0; j<nc; j++)
+           mat[i*nc+j]=0;
+}    
