@@ -1,3 +1,8 @@
+pgmm version 1.2.1 2018-03-12:
+
+- changes to NAMESPACE: addition of two importFrom()
+- added src/init.c
+
 pgmm version 1.2 2015-04-27:
 
 - C code changed for efficiency

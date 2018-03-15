@@ -1,6 +1,6 @@
-075fe3dbf2cff26f4a4203035ac052b8 *ChangeLog
-94da74a7325ce4651ec12adb2603d82e *DESCRIPTION
-48843ad2c3ef6a7e9f27ed6e9af65104 *NAMESPACE
+b8fad95a4010b514e2fa171477d98dec *ChangeLog
+4c817a5a84dcbd977a4ef858130f27f0 *DESCRIPTION
+9838a4d64f2b73e45eb82d63780d8214 *NAMESPACE
 540c7560c74459f6a903e9789ecfac05 *R/pgmmEM.R
 d04a0426dca5615cf60f48821aced7e8 *data/coffee.rda
 35102c420d8b95d58288509cb1d81d58 *data/olive.rda
@@ -10,9 +10,10 @@ d04a0426dca5615cf60f48821aced7e8 *data/coffee.rda
 e8b607dfe6e997111bc81927c9ef19dc *man/pgmm.Rd
 69fa757f4e026c4c26fc3582e3de7b57 *man/pgmmEM.Rd
 16cdec9c796df887aecff31091748963 *man/wine.Rd
-41602b152aff309d369cbd06ea7f8e87 *src/Makevars
+2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars
 c38d2ca4a272af97d2428ea1c6d82693 *src/aecm.c
 33e50461148210ec05a4c5bc0ce78f91 *src/functions.h
 f9d0ddf97965a3505370532d9e04d566 *src/gaussj.c
+1f96184ff7090f69d4fc4b9bf207159e *src/init.c
 58c0ccc530c6d1ef07505072fbb90150 *src/pgmm.c
 1f0673bcf4683e8c1d21e7d2e2b647b9 *src/updates.c
