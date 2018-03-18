@@ -204,7 +204,7 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
                             for(i9 in 1:N){
                                 icl2<-icl2+log(z_mat_tmp[i9,mapZ[i9]])
                             }
-                            bic_out[[m]][g1-G_offset,q1-q_offset]<-bic_out[[m]][g1-G_offset,q1-q_offset]+icl2
+                            bic_out[[m]][g1-G_offset,q1-q_offset]<-bic_out[[m]][g1-G_offset,q1-q_offset]+2*icl2
                         }
                         if(temp[[2]]>bic_max){
 							z_best<-temp[[1]];bic_best<-temp[[2]];
@@ -254,7 +254,7 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
                                             icl1<-icl1+log(z_mat_tmp[i9,mapZ[i9]])
                                         }
                                     }
- 									bic_start[g1-G_offset,q1-q_offset]<-bic_start[g1-G_offset,q1-q_offset]+icl1
+ 									bic_start[g1-G_offset,q1-q_offset]<-bic_start[g1-G_offset,q1-q_offset]+2*icl1
 								}
 								if(bic_start[g1-G_offset,q1-q_offset]>bic_ccc_max){
 									z_init_best<-temp[[1]];
@@ -288,7 +288,7 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
                                     for(i9 in 1:N){
                                         icl2<-icl2+log(z_mat_tmp[i9,mapZ[i9]])
                                     }
-                                    temp[[2]]<-temp[[2]]+icl2
+                                    temp[[2]]<-temp[[2]]+2*icl2
                                 }
                                 if(l==1){
                             		bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
@@ -347,7 +347,7 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 								for(i9 in 1:N){
 									icl2<-icl2+log(z_mat_tmp[i9,mapZ[i9]])
 								}
-								bic_out[[m]][g1-G_offset,q1-q_offset]<-bic_out[[m]][g1-G_offset,q1-q_offset]+icl2
+								bic_out[[m]][g1-G_offset,q1-q_offset]<-bic_out[[m]][g1-G_offset,q1-q_offset]+2*icl2
 							}
 							if(temp[[2]]>bic_max){
 								z_best<-temp[[1]];bic_best<-bic_out[[m]][g1-G_offset,q1-q_offset];

@@ -1,4 +1,8 @@
-pgmm version 1.2.1 2018-03-12:
+pgmm version 1.2.2 2018-03-18:
+
+- bug fixed re calculation of ICL
+
+pgmm version 1.2.1 2018-03-14:
 
 - changes to NAMESPACE: addition of two importFrom()
 - added src/init.c
