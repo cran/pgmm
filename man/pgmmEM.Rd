@@ -46,7 +46,7 @@ A number giving the pseudo-random number seed to be used.
 A number specifying the epsilon value for the convergence criteria used in the AECM algorithms. For each algorithm, the criterion is based on the difference between the log-likelihood at an iteration and an asymptotic estimate of the log-likelihood at that iteration. This asymptotic estimate is based on the Aitken acceleration and details are given in the References. Values of \code{tol} greater than the default are not accepted.
 }
   \item{relax}{
-By default, the number of factors cannot exceed half the number of variables. Setting \code{relax=TRUE} relaxes this constraint and allows the number of factors to take any value up to three-quarters the number of variables.
+By default, the number of factors q must respect (p-q)^2 > p+q, where p is the number of variables (see Lawley & Maxwell, 1962). This is based on the values of q that will give data reduction in the factor analysis model or the mixture of factor analyzers model, i.e., model UUU. The same restriction applies for model CUU. However, for the other PGMM models, the restriction is a little different. The default \code{relax=FALSE} applies the constraint (p-q)^2 > p+q to the (maximum) value of q for all models. Setting \code{relax=TRUE} relaxes this constraint and allows q to take larger values; however, this option is not recommended for non-experts.
 }
 }
 \details{
@@ -76,6 +76,8 @@ Paul D. McNicholas [aut, cre], Aisha ElSherbiny [aut], K. Raju Jampani [ctb], Aa
 Maintainer: Paul D. McNicholas <mcnicholas@math.mcmaster.ca>
 }
 \references{
+D. N. Lawley and A. E. Maxwell (1962). Factor analysis as a statistical method. \emph{Journal of the Royal Statistical Society: Series D} \bold{12}(3), 209-229.
+
 Paul D. McNicholas and T. Brendan Murphy (2010). Model-based clustering of microarray expression data via latent Gaussian mixture models. \emph{Bioinformatics} \bold{26}(21), 2705-2712.
 
 Paul D. McNicholas (2010). Model-based classification using latent Gaussian mixture models. \emph{Journal of Statistical Planning and Inference} \bold{140}(5), 1175-1181.

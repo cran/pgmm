@@ -811,6 +811,9 @@ double aecm9(double *z, double *x, int *cls, int q, int p, int G, int N, double 
     
 	lambda_store(lam_vec, lambda, p, q);
     
+    /* Store values of delta */
+    for(i=0;i<p;i++) omega[G+i] = delta[i];
+    
     /* Deallocate memory */
      free(lambda); free(mu); free(v);  free(n); free(log_c);
       free(l); free(at); free(pi); free(log_detpsi); free(delta); free(log_detsig);
@@ -908,6 +911,10 @@ double aecm10(double *z, double *x, int *cls, int q, int p, int G, int N, double
    	bic = 2.0*l[it-1] - a*log(N);
     
     lambda_storeG(lam_vec, lambda, G, p, q);
+    
+    /* Store values of delta */
+    for(i=0;i<p;i++) omega[G+i] = delta[i];
+    
     free(mu); free(v);  free(n); free(log_c); free(l); free(at); free(pi); free(log_detpsi); free(delta); free(log_detsig);    
 
         for(g=0; g < G; g++) {
@@ -925,7 +932,7 @@ double aecm10(double *z, double *x, int *cls, int q, int p, int G, int N, double
 double aecm11(double *z, double *x, int *cls, int q, int p, int G, int N, double *lam_vec, double *psi_vec, double tol){
 
         double bic, log_detpsi, a, omega;
-	int g,i,j,it=0,stop=0;
+	int g,i,j,k=1,it=0,stop=0;
 
 	/* printf("G=%d \t q=%d\n",G,q);*/
         double *max_v = malloc(sizeof(double)*N);
@@ -1023,7 +1030,15 @@ double aecm11(double *z, double *x, int *cls, int q, int p, int G, int N, double
     
 	lambda_store(lam_vec, lambda, p, q);
     
-
+    /* Store values of omega and delta */
+    psi_vec[0]=omega;
+    for(g=0;g<G;g++){
+      for(i=0;i<p;i++){
+        psi_vec[k]=delta[g*p+i];
+        k++;
+      }
+    }  
+    
         free(lambda); free(mu); free(v);  free(n); free(log_c); free(l); free(at); free(pi); free(delta);  free(log_detsig);
         free(delta0);
         for(g=0; g < G; g++) {
@@ -1040,7 +1055,7 @@ double aecm11(double *z, double *x, int *cls, int q, int p, int G, int N, double
 double aecm12(double *z, double *x, int *cls, int q, int p, int G, int N, double *lam_vec, double *psi_vec, double tol){
 
         double bic, omega,  log_detpsi, a;
-	int g,i,j,it=0,stop=0;
+	int g,i,j,k=1,it=0,stop=0;
 	       
 	/* printf("G=%d \t q=%d\n",G,q);*/
         double *max_v = malloc(sizeof(double)*N);
@@ -1139,19 +1154,25 @@ double aecm12(double *z, double *x, int *cls, int q, int p, int G, int N, double
    	bic = 2.0*l[it-1] - a*log(N);
     
     lambda_storeG(lam_vec, lambda, G, p, q);
+    /* Store values of omega and delta */
+    psi_vec[0]=omega;
+    for(g=0;g<G;g++){
+      for(i=0;i<p;i++){
+        psi_vec[k]=delta[g*p+i];
+        k++;
+      }
+    }  
     
-        free(mu); free(v); free(n); free(l); free(at); free(pi); free(delta);
-        free(log_c); free(log_detsig);
+    free(mu); free(v); free(n); free(l); free(at); free(pi); free(delta);
+    free(log_c); free(log_detsig);
 
-
-        for(g=0; g < G; g++) {
-           free(beta[g]);
-           free(theta[g]);
-           free(lambda[g]);
-           free(sampcov[g]);
-        }
-       free(beta); free(theta); free(lambda); free(sampcov);
-
+    for(g=0; g < G; g++) {
+      free(beta[g]);
+      free(theta[g]);
+      free(lambda[g]);
+      free(sampcov[g]);  
+    }
+    free(beta); free(theta); free(lambda); free(sampcov);
 
 	return bic;
 }

@@ -156,9 +156,9 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 	if(Gmax<Gmin){stop("The first element in the range rG is larger than the last.");}
 	if(qmax<qmin){stop("The first element in the range rq is larger than the last.");}
 	if(!relax){
-        if(qmax>p/2){stop("qmax>p/2 is not allowed; set relax=TRUE to relax this constraint.");}
+        if(((p-qmax)^2 < p+qmax)||((p-qmax)^2 == p+qmax)){stop("By default, pgmm requires that (p-q)^2 > p+q. Expert users may consider relax=TRUE.");}
     }else{
-        if(qmax>(3*p/4)){stop("qmax>3p/4 is not allowed.");}
+        if(((p-qmax)^2 < p+qmax)||((p-qmax)^2 == p+qmax)){cat("You are running pgmm for values of q outisde the recommended range. This is not recommended for non-experts.");}
     }
 	if(!is.double(x)){stop("All elements of x must have type double.");}
 	if(!is.logical(cccStart)){stop("cccStart takes logical values only.");}
@@ -185,13 +185,13 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 			}		
 			for (m in modelSubset){
 				for (q1 in rq){
-                    if(substr(m,1,1)=="C"){
-                        lam_temp<-LAMBDA[[q1-q_offset]]$tilde
-                    }else{
-                        lam_temp<-LAMBDA[[q1-q_offset]]$sep
-                    }
-                    psi_temp<-LAMBDA[[q1-q_offset]]$psi[[model_num[m]]]
-                    temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,model_num[m],class_ind,lam_temp,psi_temp)
+          if(substr(m,1,1)=="C"){
+            lam_temp<-LAMBDA[[q1-q_offset]]$tilde
+          }else{
+            lam_temp<-LAMBDA[[q1-q_offset]]$sep
+          }
+          psi_temp<-LAMBDA[[q1-q_offset]]$psi[[model_num[m]]]
+          temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,model_num[m],class_ind,lam_temp,psi_temp)
 					bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
 					if(!is.nan(temp[[2]])){
 						if(icl&(g1>1)){
@@ -250,15 +250,15 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 									}
 									icl1<-0
 									if(icl){
-                                        for(i9 in 1:N){
-                                            icl1<-icl1+log(z_mat_tmp[i9,mapZ[i9]])
-                                        }
-                                    }
+                    for(i9 in 1:N){
+                      icl1<-icl1+log(z_mat_tmp[i9,mapZ[i9]])
+                    }
+                  }
  									bic_start[g1-G_offset,q1-q_offset]<-bic_start[g1-G_offset,q1-q_offset]+2*icl1
 								}
 								if(bic_start[g1-G_offset,q1-q_offset]>bic_ccc_max){
 									z_init_best<-temp[[1]];
-                                    bic_ccc_max<-bic_start[g1-G_offset,q1-q_offset]
+                  bic_ccc_max<-bic_start[g1-G_offset,q1-q_offset]
 								}
 							}
 						}
@@ -268,43 +268,43 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 						}
 						z1<-as.vector(t(z_init_mat))
 					}
-                    for (m in modelSubset){
-                        for (q1 in rq){
-                            if(substr(m,1,1)=="C"){
-                                lam_temp<-LAMBDA[[q1-q_offset]]$tilde
-                            }else{
-                                lam_temp<-LAMBDA[[q1-q_offset]]$sep
-                            }
-                            psi_temp<-LAMBDA[[q1-q_offset]]$psi[[model_num[m]]]
-                            temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,model_num[m],class_ind,lam_temp,psi_temp)
-                            if(!is.nan(temp[[2]])){
-                            	if(icl&(g1>1)){
-                                    z_mat_tmp<-matrix(temp[[1]],nrow=N,ncol=g1,byrow=TRUE)
-                                    mapZ<-rep(0,N)
-                                    for(i9 in 1:N){
-                                        mapZ[i9]<-which(z_mat_tmp[i9,1:g1]==max(z_mat_tmp[i9,1:g1]))
-                                    }
-                                    icl2<-0
-                                    for(i9 in 1:N){
-                                        icl2<-icl2+log(z_mat_tmp[i9,mapZ[i9]])
-                                    }
-                                    temp[[2]]<-temp[[2]]+2*icl2
-                                }
-                                if(l==1){
-                            		bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
-                            	}else if(is.na(bic_out[[m]][g1-G_offset,q1-q_offset])){
-                            		bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
-                            	}else if(bic_out[[m]][g1-G_offset,q1-q_offset]<temp[[2]]){
-                            		bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
-                            	}
-                                if(temp[[2]]>bic_max){
-                                    z_best<-temp[[1]];bic_best<-temp[[2]];
-                                    bic_max<-bic_best;G_best<-g1;q_best<-q1;
-                                    m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
-                                }
-                            }
-                        }
-                    }
+          for (m in modelSubset){
+            for (q1 in rq){
+              if(substr(m,1,1)=="C"){
+                lam_temp<-LAMBDA[[q1-q_offset]]$tilde
+              }else{
+                lam_temp<-LAMBDA[[q1-q_offset]]$sep
+              }
+              psi_temp<-LAMBDA[[q1-q_offset]]$psi[[model_num[m]]]
+              temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,model_num[m],class_ind,lam_temp,psi_temp)
+              if(!is.nan(temp[[2]])){
+                if(icl&(g1>1)){
+                  z_mat_tmp<-matrix(temp[[1]],nrow=N,ncol=g1,byrow=TRUE)
+                  mapZ<-rep(0,N)
+                  for(i9 in 1:N){
+                    mapZ[i9]<-which(z_mat_tmp[i9,1:g1]==max(z_mat_tmp[i9,1:g1]))
+                  }
+                  icl2<-0
+                  for(i9 in 1:N){
+                    icl2<-icl2+log(z_mat_tmp[i9,mapZ[i9]])
+                  }
+                  temp[[2]]<-temp[[2]]+2*icl2
+                }
+                if(l==1){
+                  bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
+                }else if(is.na(bic_out[[m]][g1-G_offset,q1-q_offset])){
+                  bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
+                }else if(bic_out[[m]][g1-G_offset,q1-q_offset]<temp[[2]]){
+                  bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
+                }
+                if(temp[[2]]>bic_max){
+                  z_best<-temp[[1]];bic_best<-temp[[2]];
+                  bic_max<-bic_best;G_best<-g1;q_best<-q1;
+                  m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
+                }
+              }
+            }
+          }
 				}
 			}
 		}else if((zstart==2)||(zstart==3)){
@@ -334,7 +334,7 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 							lam_temp<-LAMBDA[[q1-q_offset]]$sep
 						}
 						psi_temp<-LAMBDA[[q1-q_offset]]$psi[[model_num[m]]]
-                        temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,model_num[m],class_ind,lam_temp,psi_temp)
+            temp<-run_pgmm(x1,z1,0,class,q1,p,g1,N,model_num[m],class_ind,lam_temp,psi_temp)
 						bic_out[[m]][g1-G_offset,q1-q_offset]<-temp[[2]]
 						if(!is.nan(temp[[2]])){
 							if(icl&(g1>1)){
@@ -357,58 +357,56 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 								m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
 							}
 						}else{z_mat<-NULL}
-                                             
 					}
 				}
 			}
 		}else{
-            stop("Invalid entry for zstart: 1 random; 2 k-means; 3 user-specified list.")
-        }
+      stop("Invalid entry for zstart: 1 random; 2 k-means; 3 user-specified list.")
+    }
 	}
 #	z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
 #        if((!is.nan(temp[[2]]))&temp[[2]]>bic_max){ 
-        if((!is.nan(temp[[2]]))){ 
+  if((!is.nan(temp[[2]]))){ 
 	if(substr(m_best,1,1)=="C"){
         lambda_mat<-matrix(lambda_best,nrow=p,ncol=q_best,byrow=TRUE)
-    }else{
-        lambda_mat<-NULL;
-        for(g1 in 1:G_best){
-            upper<-(q_best*p)*g1;
-            lambda_mat[[g1]]<-matrix(lambda_best[(upper-(p*q_best-1)):upper],nrow=p,ncol=q_best,byrow=TRUE);
-        }
+  }else{
+    lambda_mat<-NULL;
+    for(g1 in 1:G_best){
+      upper<-(q_best*p)*g1;
+      lambda_mat[[g1]]<-matrix(lambda_best[(upper-(p*q_best-1)):upper],nrow=p,ncol=q_best,byrow=TRUE);
     }
-    if((m_best=="CUU")||(m_best=="UUU")){
-        psi_mat<-list()
-        for(g1 in 1:G_best){
-            upper<-p*g1;
-            psi_mat[[g1]]<-diag(psi_best[(upper-p+1):upper]);
-        }
+  }
+  if((m_best=="CUU")||(m_best=="UUU")){
+    psi_mat<-list()
+    for(g1 in 1:G_best){
+      upper<-p*g1;
+      psi_mat[[g1]]<-diag(psi_best[(upper-p+1):upper]);
+    }
     }else if((m_best=="CCC")||(m_best=="UCC")){
-        psi_mat<-psi_best[1];
+      psi_mat<-psi_best[1];
     }else if((m_best=="CCU")||(m_best=="UCU")){
-        psi_mat<-psi_best[1:p];
+      psi_mat<-psi_best[1:p];
     }else if((m_best=="CUC")||(m_best=="UUC")){
-        psi_mat<-list()
-        for(g1 in 1:G_best){
-            psi_mat[[g1]]<-psi_best[g1];
-        }
+      psi_mat<-list()
+      for(g1 in 1:G_best){
+        psi_mat[[g1]]<-psi_best[g1];
+      }
     }else if((m_best=="CCUU")||(m_best=="UCUU")){
-        psi_mat<-list();
-        psi_mat[["omega"]]<-psi_best[1:G_best];
-        psi_mat[["delta"]]<-diag(psi_best[(G_best+1):(G_best+p)]);
+      psi_mat<-list();
+      psi_mat[["omega"]]<-psi_best[1:G_best];
+      psi_mat[["delta"]]<-diag(psi_best[(G_best+1):(G_best+p)]);
     }else if((m_best=="CUCU")||(m_best=="UUCU")){
-        psi_mat<-list();
-        psi_mat[["omega"]]<-psi_best[1];
-        for(g1 in 1:G_best){
-            temp_string<-paste("delta",toString(g1),sep="");
-            lower<-2+(g1-1)*p
-            psi_mat[[temp_string]]<-diag(psi_best[lower:(lower+p-1)]);
-        }
+      psi_mat<-list();
+      psi_mat[["omega"]]<-psi_best[1];
+      for(g1 in 1:G_best){
+        temp_string<-paste("delta",toString(g1),sep="");
+        lower<-2+(g1-1)*p
+        psi_mat[[temp_string]]<-diag(psi_best[lower:(lower+p-1)]);
+      }
     }
     z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
-  }else{z_mat=NULL  
-}
-    if(G_best >0){
+  }else{z_mat=NULL}
+  if(G_best >0){
     class_best<-rep(0,N)
 	for(i in 1:N){
 		class_best[i]<-which(z_mat[i,1:G_best]==max(z_mat[i,1:G_best]))
@@ -421,8 +419,8 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 	}
     class(foo)<-"pgmm"
     foo
-} else{stop}
-  }
+  }else{stop}
+}
 summary.pgmm<-function(object,...){
     a<-object$summ_info[[1]]
     b<-object$summ_info[[2]]

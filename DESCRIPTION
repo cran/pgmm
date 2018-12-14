@@ -1,8 +1,8 @@
 Package: pgmm
 Type: Package
 Title: Parsimonious Gaussian Mixture Models
-Version: 1.2.2
-Date: 2018-03-18
+Version: 1.2.3
+Date: 2018-12-13
 Authors@R: c(person("Paul D.", "McNicholas", role = c("aut", "cre"), email = "mcnicholas@math.mcmaster.ca"), person("Aisha", "ElSherbiny", role = "aut"), person("K. Raju", "Jampani", role = "ctb"), person("Aaron F.", "McDaid", role = "aut"), person("T. Brendan", "Murphy", role = "aut"),person("Larry", "Banks", role = "ctb"))
 Author: Paul D. McNicholas [aut, cre],
   Aisha ElSherbiny [aut],
@@ -16,5 +16,5 @@ License: GPL (>= 2)
 LazyLoad: yes
 Repository: CRAN
 NeedsCompilation: yes
-Packaged: 2018-03-18 18:45:28 UTC; paul
-Date/Publication: 2018-03-18 21:30:19 UTC
+Packaged: 2018-12-14 02:16:26 UTC; paul
+Date/Publication: 2018-12-14 05:50:03 UTC

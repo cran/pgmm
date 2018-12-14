@@ -1,3 +1,8 @@
+pgmm version 1.2.3 2018-12-13:
+
+- permissible values of number of factors q updated in line with Lawley and Maxwell (1962)
+- bug fixed so that omega and delta now returned for four "extra" models for semi-supervised classifiction
+
 pgmm version 1.2.2 2018-03-18:
 
 - bug fixed re calculation of ICL
