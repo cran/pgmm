@@ -1,8 +1,8 @@
-double (*testfunc)(double *, double *, int *,int,int,int,int,double *,double *,double);
+/*double (*testfunc)(double *, double *, int *,int,int,int,int,double *,double *,double);
 typedef typeof(testfunc) funcType;
 
 double (*testfunc2)(double *, double *,int,int,int,int,double *,double *,double);
-typedef typeof(testfunc2) funcType2;
+typedef typeof(testfunc2) funcType2;*/
 
 /* Functions that dynamically allocate memory. */
 void my_alloc(double ***vec, int n, int m);
@@ -109,8 +109,8 @@ int convergtest_NEW(double *l, double *at, double *v_max, double *v, int N, int 
 
 /************* Others ***************/
 int maxi(double *z, int G);
-extern funcType funcs[13];
-extern funcType2 funcs2[13];
+/*extern funcType funcs[13];
+extern funcType2 funcs2[13];*/
 double maximum_array(double *array, int k);
 void known_z(int *class, double *z, int N, int G);
 void printmx(double *A, int r, int c);

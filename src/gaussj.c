@@ -3,13 +3,8 @@
 #include <math.h>
 #include<R.h>
 #include "functions.h"
-#ifdef __APPLE__
-#include <Accelerate/Accelerate.h>
-#else
 #include <R_ext/Lapack.h>
 #include <R_ext/BLAS.h>
-#endif
-
 
 void generate_identity(int N, double *matrix){
     int i, j;

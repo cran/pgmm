@@ -3,8 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+double (*testfunc)(double *, double *, int *,int,int,int,int,double *,double *,double);
+typedef typeof(testfunc) funcType;
+double (*testfunc2)(double *, double *,int,int,int,int,double *,double *,double);
+typedef typeof(testfunc2) funcType2;
+extern funcType funcs[13];
+extern funcType2 funcs2[13];
 #include "functions.h"
 #include "time.h"
+
 funcType funcs[13] = {NULL, aecm,aecm2,aecm3,aecm4,aecm5,aecm6,aecm7,aecm8,aecm9,aecm10,aecm11,aecm12};
 funcType2 funcs2[13] = {NULL, claecm,claecm2,claecm3,claecm4,claecm5,claecm6,claecm7,claecm8,claecm9,claecm10,claecm11,claecm12};
 
