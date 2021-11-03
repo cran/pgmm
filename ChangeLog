@@ -1,3 +1,7 @@
+pgmm version 1.2.5 2021-11-03:
+
+- USE_FC_LEN_T defined in pgmm.c and init.c in preparation for R version 4.2.0
+
 pgmm version 1.2.4 2019-12-03:
 
 - gcc10 compatibility issues resolved 

@@ -1,9 +1,6 @@
+#define USE_FC_LEN_T
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
-
-/* FIXME: 
-   Check these declarations against the C/Fortran source code.
-*/
 
 /* .C calls */
 extern void pgmm_c(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
