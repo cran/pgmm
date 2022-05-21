@@ -9,8 +9,8 @@ An implementation of model-based clustering and model-based classification using
 \tabular{ll}{
 Package: \tab pgmm\cr
 Type: \tab Package\cr
-Version: \tab 1.2.5\cr
-Date: \tab 2021-11-03\cr
+Version: \tab 1.2.6\cr
+Date: \tab 2022-05-20\cr
 License: \tab GPL (>=2)\cr
 }
 This package contains the function \code{\link{pgmmEM}} plus three data sets.

@@ -1,4 +1,6 @@
-#define USE_FC_LEN_T
+#ifndef  USE_FC_LEN_T
+# define USE_FC_LEN_T
+#endif
 #include <R.h>
 #include <math.h>
 #include <stdio.h>

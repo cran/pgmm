@@ -1,5 +1,5 @@
-5c11f12964b2fcf3d7f7e0b0b590eb0e *ChangeLog
-f447250fa94dc191c06496315bd9d7fe *DESCRIPTION
+0051e6d2387eb0af2bbb2b9aeac23ee1 *ChangeLog
+fce89a7131a17eaeffc61615e4fd96ae *DESCRIPTION
 9838a4d64f2b73e45eb82d63780d8214 *NAMESPACE
 a1ed1d6e960ff3029c582441f2d9583e *R/pgmmEM.R
 d04a0426dca5615cf60f48821aced7e8 *data/coffee.rda
@@ -7,13 +7,13 @@ d04a0426dca5615cf60f48821aced7e8 *data/coffee.rda
 21074c88ab5683683ecc690c0dd5dde4 *data/wine.rda
 31c2462b71030dfa4fc8c74883c1970d *man/coffee.Rd
 0a49fb082af6a294d378a32b52e91de5 *man/olive.Rd
-80db6b7b21f5afcb7e2c25376431c5eb *man/pgmm.Rd
+dcea71b800496c1203ac955fd9f8e486 *man/pgmm.Rd
 73d92be05eede4e5dd7518e473931b23 *man/pgmmEM.Rd
 16cdec9c796df887aecff31091748963 *man/wine.Rd
 2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars
 6073e4c62d83cf60ed5d621821ca46fd *src/aecm.c
 c20080dc6d5b884946425697408f81f6 *src/functions.h
-bb22a69bdb45f431142d5002c9eebc4b *src/gaussj.c
-71ad6c3c449ca1ac2eadd58af7cde5c9 *src/init.c
-a9edd311e2bedd89debf5dcb597ff85c *src/pgmm.c
+58e489f540a41608521fc4d7f813e980 *src/gaussj.c
+b4ad5f2284c9c71b572b46b8b836982d *src/init.c
+3bb05d73d09b3e1ff249b38e6046adcb *src/pgmm.c
 1f0673bcf4683e8c1d21e7d2e2b647b9 *src/updates.c

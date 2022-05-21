@@ -5,6 +5,9 @@
 #include "functions.h"
 #include <R_ext/Lapack.h>
 #include <R_ext/BLAS.h>
+#ifndef FCONE
+# define FCONE
+#endif
 
 void generate_identity(int N, double *matrix){
     int i, j;
@@ -97,7 +100,7 @@ void mx_mult(int m, int n, int q, double *a, double *b, double *r){
     double alpha = 1.0f;
     double beta = 0.0f;
     
-    dgemm_(&notrans,&notrans, &q, &m, &n, &alpha, b, &q, a, &n, &beta, r, &q);
+    dgemm_(&notrans,&notrans, &q, &m, &n, &alpha, b, &q, a, &n, &beta, r, &q FCONE FCONE);
     
 }
 

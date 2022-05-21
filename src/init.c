@@ -1,4 +1,6 @@
-#define USE_FC_LEN_T
+#ifndef  USE_FC_LEN_T
+# define USE_FC_LEN_T
+#endif
 #include <stdlib.h> // for NULL
 #include <R_ext/Rdynload.h>
 
