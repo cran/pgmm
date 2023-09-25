@@ -22,5 +22,5 @@ Streuli, H. (1973). Der heutige stand der kaffeechemie. In \emph{Association Sci
 %data(coffee)
 % maybe str(coffee) ; plot(coffee) ...
 %}
-\note{The German to English translations of the variable names were carried out by Dr. Sharon M. McNicholas.}
+\note{The German to English translations of the variable names were carried out by Sharon King-Yu.}
 \keyword{datasets}

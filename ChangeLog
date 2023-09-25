@@ -1,3 +1,7 @@
+pgmm version 1.2.7 2023-09-25:
+
+- alias added to pgmm.Rd
+
 pgmm version 1.2.6 2022-05-20:
 
 - FCONE defined in gauss.c and used in dgemm call

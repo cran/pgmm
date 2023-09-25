@@ -1,10 +1,16 @@
 Package: pgmm
 Type: Package
 Title: Parsimonious Gaussian Mixture Models
-Version: 1.2.6
-Date: 2022-05-20
-Authors@R: c(person("Paul D.", "McNicholas", role = c("aut", "cre"), email = "mcnicholas@math.mcmaster.ca"), person("Aisha", "ElSherbiny", role = "aut"), person("K. Raju", "Jampani", role = "ctb"), person("Aaron F.", "McDaid", role = "aut"), person("T. Brendan", "Murphy", role = "aut"),person("Larry", "Banks", role = "ctb"))
-Author: Paul D. McNicholas [aut, cre],
+Version: 1.2.7
+Date: 2023-09-25
+Authors@R: c(
+  person("Paul D.", "McNicholas", role = c("aut", "cre"), email = "mcnicholas@math.mcmaster.ca", comment = c(ORCID = "0000-0002-2482-523X")), 
+  person("Aisha", "ElSherbiny", role = "aut"), 
+  person("K. Raju", "Jampani", role = "ctb"), 
+  person("Aaron F.", "McDaid", role = "aut"), 
+  person("T. Brendan", "Murphy", role = "aut"),
+  person("Larry", "Banks", role = "ctb"))
+Author: Paul D. McNicholas [aut, cre] (<https://orcid.org/0000-0002-2482-523X>),
   Aisha ElSherbiny [aut],
   K. Raju Jampani [ctb],
   Aaron F. McDaid [aut],
@@ -16,5 +22,5 @@ License: GPL (>= 2)
 LazyLoad: yes
 Repository: CRAN
 NeedsCompilation: yes
-Packaged: 2022-05-20 15:21:23 UTC; paul
-Date/Publication: 2022-05-21 23:00:08 UTC
+Packaged: 2023-09-25 18:38:56 UTC; paul
+Date/Publication: 2023-09-25 20:00:04 UTC
