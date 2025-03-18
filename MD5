@@ -1,13 +1,13 @@
-7edae4af08705ae9ddf9c86f9b04ac9d *ChangeLog
-fe477ea20fd302f4a0df497d154389bd *DESCRIPTION
+1a78afaee125150f00b1bf5746963dda *ChangeLog
+776cb3dcfd51c6be2edc79f75ee269d9 *DESCRIPTION
 9838a4d64f2b73e45eb82d63780d8214 *NAMESPACE
-a1ed1d6e960ff3029c582441f2d9583e *R/pgmmEM.R
+c3f45158657f512d2d57f177747fa59e *R/pgmmEM.R
 d04a0426dca5615cf60f48821aced7e8 *data/coffee.rda
 35102c420d8b95d58288509cb1d81d58 *data/olive.rda
 21074c88ab5683683ecc690c0dd5dde4 *data/wine.rda
 671875d81a8758559f0a1e6523b7665a *man/coffee.Rd
 0a49fb082af6a294d378a32b52e91de5 *man/olive.Rd
-1a7c2c5b75114c79413cd29470221855 *man/pgmm.Rd
+bebeec3da9a1653d53ef97f7cb981744 *man/pgmm.Rd
 73d92be05eede4e5dd7518e473931b23 *man/pgmmEM.Rd
 16cdec9c796df887aecff31091748963 *man/wine.Rd
 2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars

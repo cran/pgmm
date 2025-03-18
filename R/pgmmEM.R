@@ -351,9 +351,9 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 							}
 							if(temp[[2]]>bic_max){
 								z_best<-temp[[1]];bic_best<-bic_out[[m]][g1-G_offset,q1-q_offset];
-#	                                                        z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
+#	              z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE);
 								bic_max<-bic_best;G_best<-g1;q_best<-q1;
-	                                                        z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
+	              z_mat<-matrix(z_best,nrow=N,ncol=G_best,byrow=TRUE)
 								m_best<-m;lambda_best<-temp[[3]];psi_best<-temp[[4]]
 							}
 						}else{z_mat<-NULL}
@@ -368,7 +368,7 @@ pgmmEM<-function(x,rG=1:2,rq=1:2,class=NULL,icl=FALSE,zstart=2,cccStart=TRUE,loo
 #        if((!is.nan(temp[[2]]))&temp[[2]]>bic_max){ 
   if((!is.nan(temp[[2]]))){ 
 	if(substr(m_best,1,1)=="C"){
-        lambda_mat<-matrix(lambda_best,nrow=p,ncol=q_best,byrow=TRUE)
+	      lambda_mat<-matrix(lambda_best[1:(p*q_best)],nrow=p,ncol=q_best,byrow=TRUE)
   }else{
     lambda_mat<-NULL;
     for(g1 in 1:G_best){

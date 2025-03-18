@@ -1,3 +1,7 @@
+pgmm version 1.2.8 2025-03-18:
+
+- minor edit to line 371 of pgmmEM.R to avoid warning "data length differs from size of matrix"
+
 pgmm version 1.2.7 2023-09-25:
 
 - alias added to pgmm.Rd

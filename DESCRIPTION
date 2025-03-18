@@ -1,8 +1,8 @@
 Package: pgmm
 Type: Package
 Title: Parsimonious Gaussian Mixture Models
-Version: 1.2.7
-Date: 2023-09-25
+Version: 1.2.8
+Date: 2025-03-18
 Authors@R: c(
   person("Paul D.", "McNicholas", role = c("aut", "cre"), email = "mcnicholas@math.mcmaster.ca", comment = c(ORCID = "0000-0002-2482-523X")), 
   person("Aisha", "ElSherbiny", role = "aut"), 
@@ -22,5 +22,5 @@ License: GPL (>= 2)
 LazyLoad: yes
 Repository: CRAN
 NeedsCompilation: yes
-Packaged: 2023-09-25 18:38:56 UTC; paul
-Date/Publication: 2023-09-25 20:00:04 UTC
+Packaged: 2025-03-18 17:52:42 UTC; paul
+Date/Publication: 2025-03-18 18:40:02 UTC
